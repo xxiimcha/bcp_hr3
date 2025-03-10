@@ -1,0 +1,250 @@
+/* General Body Styling */
+body, body.dark-mode {
+    overflow: hidden; /* Prevent scrolling */
+    font-family:Arial, Helvetica, sans-serif;
+    background: url('../img/indexlake.jpg') no-repeat center center fixed; /* Background image */
+    background-size: cover; /* Ensure the image covers the entire viewport */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+}
+
+/* Dark Mode */
+body.dark-mode {
+    color: rgb(255, 255, 255);
+}
+
+/* Fade-in Animation for Body */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Container Styles */
+.container {
+    position: relative;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: slideUp 0.6s ease-out; /* Slide-up animation */
+    margin-bottom: 0px;
+}
+
+/* Dark Mode Container */
+body.dark-mode .container {
+    background-color: rgba(34, 34, 34, 0.65); /* Dark mode transparency */
+    border: 1px solid rgba(51, 51, 51, 0.65); /* Dark mode border */
+    
+}
+
+/* Slide-up Animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input Fields */
+input[type="text"], input[type="password"], input[type="email"], select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #28a745;
+    border-radius: 25px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+/* Input Focus Styles */
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, select:focus {
+    border-color: #8eb69b; /* Greenish color on focus */
+    outline: none; /* Remove outline */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Shadow effect */
+}
+
+/* Password Container */
+.password-container {
+    position: relative; /* For absolute positioning of child elements */
+    width: 100%;
+}
+
+.password-container input[type="password"] {
+    padding-right: 50px; /* Space for checkbox */
+}
+
+/* Password Checkbox Styling */
+.password-container label {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.password-container input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+/* Buttons */
+.resetPass, .login {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin: 3px 0;
+    background-color: #2cac4a;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Button Hover Effects */
+.resetPass:hover, .login:hover {
+    background-color: #1e8135; /* Darker green on hover */
+}
+
+/* Toggle Dark Mode Button */
+.dark-mode-toggle {
+    font-size: 14px;
+    background-color: #18191A;
+    color: #fff;
+    border-radius: 30px;
+    border: none;
+    width: 35px;
+    height: 35px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.dark-mode-toggle:hover {
+    background-color: #00f400;
+}
+
+body.dark-mode .dark-mode-toggle {
+    background-color: white;
+    color: black;
+}
+
+/* Popup Styles */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    animation: popupFadeIn 0.5s forwards;
+}
+
+body.dark-mode .popup {
+    background-color: #222;
+}
+
+/* Fade-in Animation for Popup */
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Welcome Section */
+.welcome-section {
+    position: relative;
+    padding: 40px;
+    color: #222;
+    text-align: center;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    animation: welcomeFadeIn 1s ease-out forwards;
+}
+
+/* Dark Mode Welcome Section */
+body.dark-mode .welcome-section {
+    color: #fff;
+}
+
+/* Fade-in Animation for Welcome Section */
+@keyframes welcomeFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Scrollbar Styles */
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Error Message */
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+
+/* Role Switch Buttons */
+#switchToEmployeeBtn, #switchToAdminBtn, #forgotPasswordBtn, 
+#switchToForgotPasswordBtn, #switchToForgotPasswordFromEmployeeBtn, 
+#switchToAdminFromForgotPasswordBtn {
+    background: none;
+    color: #007bff;
+    border: none;
+    padding: 0;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+#switchToEmployeeBtn:hover, #switchToAdminBtn:hover, 
+#forgotPasswordBtn:hover, #switchToForgotPasswordBtn:hover, 
+#switchToForgotPasswordFromEmployeeBtn:hover, #switchToAdminFromForgotPasswordBtn:hover {
+    color: #0056b3;
+}

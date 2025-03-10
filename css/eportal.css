@@ -1,0 +1,371 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+/* Container */
+.portal-container {
+    max-width: 95%;
+    margin: auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.portal-header {
+    text-align: center; /* Center align text and image */
+    padding: 40px 20px; /* Padding around the header */
+    background-color: #f8f9fa; /* Light background color for contrast */
+}
+
+.plogo {
+    max-width: 150px; /* Limit the logo size */
+    height: auto; /* Maintain aspect ratio */
+    margin-bottom: 20px; /* Spacing below the logo */
+}
+
+.portal-header h1 {
+    font-size: 32px; /* Font size for the main heading */
+    color: #333; /* Dark text color for contrast */
+    margin: 0; /* Remove default margin */
+    line-height: 1.2; /* Adjust line height for readability */
+    font-weight: bold; /* Make the heading bold */
+    text-transform: uppercase; /* Uppercase letters for emphasis */
+}
+
+
+
+.portal-header h1::after {
+    content: ''; /* Add a visual element after the heading */
+    display: block; /* Block display for full width */
+    width: 50px; /* Width of the underline */
+    height: 4px; /* Height of the underline */
+    margin: 10px auto; /* Center the underline */
+}
+
+
+/* Navigation */
+nav {
+    margin-bottom: 20px;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 15px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+    transition: background 0.3s;
+}
+
+nav ul li a:hover {
+    background-color: #e0e0e0;
+    border-radius: 5px;
+}
+
+.dropdown-content {
+    display: none; /* Hidden by default */
+    right: -20px;
+    position: absolute; /* Position relative to the parent */
+    background-color: #fff; /* White background */
+    min-width: 160px; /* Minimum width */
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2); /* Shadow for depth */
+    z-index: 1; /* Ensure it appears above other elements */
+    border-radius: 5px; /* Rounded corners */
+}
+
+/* Dropdown Link Styles */
+.dropdown-content a {
+    color: #333; /* Dark text color */
+    padding: 12px 16px; /* Padding for links */
+    text-decoration: none; /* No underline */
+    display: block; /* Block display for full-width */
+}
+
+/* Hover Effect for Dropdown Links */
+.dropdown-content a:hover {
+    background-color: #f0f0f0; /* Light gray on hover */
+}
+hr {
+    border: none; /* Remove default border */
+    height: 2px; /* Set the height of the line */
+    background-color: #28a745; /* Green color (you can change this shade) */
+    margin: 10px 0; /* Spacing above and below the line */
+}
+h4 {
+    font-size: 24px; /* Font size */
+    color: #222; /* Dark color for the text */
+    margin: 20px 0; /* Spacing above and below the heading */
+    font-weight: bold; /* Bold text */
+    text-transform: uppercase; /* Uppercase text */
+    border-bottom: 5px solid #28a745; /* Green underline */
+    padding-bottom: 10px; /* Spacing between the text and the underline */
+    width: 230px;
+}
+
+
+.gear-icon {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+/* Message Alert */
+.message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.alert {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* Sections */
+.section {
+    display: none;
+    margin: 20px 0;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background-color: #d4edda; /* Light green background */
+    color: #333; /* Dark text color for contrast */
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+    text-transform: uppercase; /* Convert text to uppercase */
+}
+
+.balance-table, .leave-approved, .pending-requests {
+    margin-bottom: 20px;
+}
+
+
+tbody tr:hover {
+    background-color: #e7efec; /* Light gray background on hover */
+}
+
+
+/* Button Styles */
+button {
+    background-color: #007bff; /* Primary color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    transform: translateY(-2px);
+}
+
+.open-overlay-button {
+    background-color: #28a745; /* Success color */
+}
+
+.open-overlay-button:hover {
+    background-color: #218838; /* Darker shade on hover */
+}
+
+/* Overlay Styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    nav ul li {
+        display: block;
+        margin: 10px 0;
+    }
+
+    button {
+        width: 100%; /* Full width buttons */
+        padding: 10px; /* Reduced padding */
+        font-size: 14px; /* Smaller font size */
+    }
+
+    .portal-container {
+        padding: 10px; /* Reduced padding for the container */
+        max-width: 90%; /* Adjust max-width for responsiveness */
+    }
+
+    .plogo {
+        max-width: 120px; /* Smaller logo size */
+    }
+
+    .portal-header h1 {
+        font-size: 28px; /* Smaller heading size */
+    }
+
+    h4 {
+        font-size: 20px; /* Smaller subheading size */
+    }
+
+    h5 {
+        font-size: 12px; /* Smaller note size */
+    }
+
+    /* Adjust input, select, and textarea styles */
+    select,
+    input[type="date"],
+    textarea {
+        width: 95%; /* Slightly smaller width */
+        font-size: 14px; /* Smaller font size */
+        padding: 8px; /* Reduced padding */
+    }
+
+    .overlay-content {
+        width: 80%; /* Adjust overlay content width */
+    }
+
+    .submit-leave {
+        padding: 10px 15px; /* Reduced padding */
+    }
+
+        /* Additional styles for responsive table */
+        table {
+            width: 100%; /* Ensure table is full width */
+            max-width: 100%; /* Prevent overflow */
+            overflow-x: auto; /* Enable horizontal scrolling */
+            display: block; /* Makes the table behave like a block element for proper width handling */
+        }
+    
+        th, td {
+            padding: 10px; /* Slightly reduced padding for smaller screens */
+            font-size: 14px; /* Smaller font size for table cells */
+        }
+}
+
+
+
+/* Close Button */
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 36px;
+    color: #666;
+    cursor: pointer;
+}
+
+
+/* Field Group Styles */
+.field-group {
+    margin-bottom: 20px;
+}
+
+/* Labels */
+label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Select and Input Styles */
+select,
+input[type="date"],
+textarea {
+    width: 97%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+select:focus,
+input[type="date"]:focus,
+textarea:focus {
+    border-color: #007BFF; /* Change border color on focus */
+    outline: none;
+}
+
+/* Submit Button Styles */
+.submit-leave {
+    background-color: #007BFF; /* Primary color */
+    color: #fff;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+/* Hover Effect for Submit Button */
+.submit-leave:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Remarks Textarea */
+textarea {
+    resize: none; /* Prevent resizing */
+}
+
+/* Note Styles */
+h5 {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 10px;
+}

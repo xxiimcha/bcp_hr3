@@ -1,0 +1,122 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    font-family: Arial,  sans-serif;
+
+  }
+  
+body.dark-mode {
+    background-color:#121212;
+    color: rgb(255, 255, 255);
+  }
+
+.container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"]  {
+    width: 100%;
+    padding: 12px 40px 12px 12px; /* Added padding on the right for checkbox */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    margin-bottom: 10px;
+}
+
+.checkbox-container {
+    position: relative; /* Allow absolute positioning of the checkbox */
+}
+
+.show-password {
+    position: absolute; /* Position checkbox within the input field */
+    right: 10px; /* Space from the right */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Adjust vertical centering */
+    cursor: pointer;
+    margin: 0; /* Remove margin */
+}
+
+.message {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.back-btn {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+.update-btn {
+    background-color: #28a745; /* Normal state color */
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box; /* Include padding and border in the element's total width */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+}
+
+.update-btn:hover {
+    background-color: #218838; /* Hover state color */
+}
+
+
+
+.add-user-btn {
+    display: inline-block; /* Ensure both buttons behave like inline-block elements */
+    padding: 12px 20px; /* Consistent padding */
+    background-color: #333; /* Same background color */
+    color: #fff; /* Same text color */
+    border: none; /* No border */
+    border-radius: 4px; /* Same rounded corners */
+    text-decoration: none; /* Remove underline */
+    font-size: 12px; /* Same font size */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+    width: 100%; /* Full width */
+    text-align: center; /* Center text */
+    margin-top: 20px; /* Top margin for spacing */
+    box-sizing: border-box; /* Include padding and border in the element's total width */
+}
+
+.add-user-btn:hover {
+    background-color: #555; /* Darker background on hover */
+   
+}
+

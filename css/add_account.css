@@ -1,0 +1,376 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 20px;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"], input[type="email"], input[type="password"], select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+button {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 12px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.error {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.password-instructions {
+    color: #555;
+    font-size: 14px;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+.password-instructions ul {
+    margin-left: 20px;
+    list-style-type: disc;
+    color: #555;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+}
+
+.back-link:hover {
+    color: #333;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+        max-width: 90%;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+
+/* Overlay Styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.overlay.active {
+    display: flex;
+}
+
+.overlay-content {
+    background: white;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.close-btn:hover {
+    background-color: #e60000;
+}
+
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: #555;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: #ff0000; /* Optional: Change color on hover */
+}
+
+
+/*-------------------DARKMODE---------------------*/
+
+
+
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+body.dark-mode {
+    background-color: #121212; /* Dark background */
+    color: #e0e0e0; /* Light text */
+}
+
+.container {
+    padding: 20px;
+    max-width: 600px;
+    width: 100%;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+body.dark-mode .container {
+    background-color: #1e1e1e; /* Dark container background */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5); /* Darker shadow */
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+body.dark-mode h1, body.dark-mode h2 {
+    color: #ffffff; /* Light header text */
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+body.dark-mode label {
+    color: #cccccc; /* Slightly lighter label text */
+}
+
+input[type="text"], input[type="email"], input[type="password"], select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+body.dark-mode input[type="text"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="password"],
+body.dark-mode select {
+    background-color: #2e2e2e; /* Dark input background */
+    color: #ffffff; /* Light input text */
+    border: 1px solid #444; /* Darker input border */
+}
+
+button {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+}
+
+body.dark-mode button {
+    background-color: #2cac4a ; /* Dark mode button color */
+    color: white;
+}
+
+body.dark-mode button:hover {
+    background-color: #1e8135 ; /* Dark mode button hover */
+}
+
+.error {
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+body.dark-mode .error {
+    color: #ff4d4d; /* Bright red for errors */
+}
+
+.password-instructions {
+    font-size: 14px;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+body.dark-mode .password-instructions {
+    color: #aaaaaa; /* Light gray for instructions */
+}
+
+.password-instructions ul {
+    margin-left: 20px;
+    list-style-type: disc;
+}
+
+body.dark-mode .password-instructions ul {
+    color: #aaaaaa; /* Light gray list text */
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+body.dark-mode .back-link {
+    color: #999999; /* Dark mode link */
+}
+
+body.dark-mode .back-link:hover {
+    color: #ffffff; /* Lighter on hover */
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+        max-width: 90%;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+
+/* Overlay Styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+body.dark-mode .overlay {
+    background: rgba(0, 0, 0, 0.85); /* Darker overlay */
+}
+
+.overlay.active {
+    display: flex;
+}
+
+.overlay-content {
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+body.dark-mode .overlay-content {
+    background: #2e2e2e; /* Dark mode content background */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5); /* Darker shadow */
+}
+
+.close-btn {
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+body.dark-mode .close-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+body.dark-mode .close-btn:hover {
+    background-color: #e60000;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+body.dark-mode .close-button {
+    color: #cccccc; /* Light close button */
+}
+
+body.dark-mode .close-button:hover {
+    color: #ff4d4d; /* Brighter on hover */
+}

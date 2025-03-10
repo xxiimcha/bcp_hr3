@@ -1,0 +1,349 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: white;
+    color: black;
+    font-size: 16px;
+}
+
+/* Navigation Bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.navbar .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 20px; 
+}
+
+.navbar ul li {
+    display: inline;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+    color: #555;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 40px;
+}
+
+/* Logo and Menu Icon Container */
+.navbar .logo-container {
+    display: flex;
+    align-items: center;
+}
+
+/* Hamburger Menu Icon Styling */
+.navbar .menu-icon {
+    margin-right: 10px;
+    font-size: 1.3rem;
+    color: black;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar .menu-icon:hover {
+    color: #555;
+}
+
+.navbar .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+
+
+
+/* Admin Section */
+.admin-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-name {
+    font-size: 1rem;
+    color: black;
+    font-weight: 500;
+}
+
+.sign-out-button {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 5px 10px;
+    border: 1px solid #335;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sign-out-button:hover {
+    background-color: #555;
+    color: white;
+}
+
+/* Custom Dialog Styles */
+.dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-content {
+    background: white;
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    width: 300px;
+}
+
+.dialog-content h3 {
+    margin-bottom: 20px;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.dialog-buttons button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dialog-buttons button.cancel {
+    background: #6c757d;
+}
+
+.dialog-buttons button:hover {
+    background: #0056b3;
+}
+
+.dialog-buttons button.cancel:hover {
+    background: #5a6268;
+}
+
+
+
+
+
+
+
+
+
+
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    text-align: left;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.submit-btn {
+    background-color: black;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #444;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+    margin-top: 20px;
+}
+
+
+
+
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    margin-top: 1.5px;
+    font-size: 14px;
+    position: absolute;
+    background-color: white;
+    min-width: 90px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: white;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* General button styling */
+.action-icon {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px; /* Adjust icon size */
+    padding: 5px; /* Add some padding */
+}
+
+/* Edit button styling */
+.edit-icon {
+    color: #007bff; /* Blue palette for edit */
+}
+
+.edit-icon:hover {
+    color: #0056b3; /* Darker blue on hover */
+}
+
+/* Delete button styling */
+.delete-icon {
+    color: #dc3545; /* Red palette for delete */
+}
+
+.delete-icon:hover {
+    color: #c82333; /* Darker red on hover */
+}
+
+/* Optional: Add a slight scale effect on hover for both buttons */
+.action-icon:hover {
+    transform: scale(1.1); /* Slight zoom effect */
+    transition: transform 0.2s ease-in-out; /* Smooth transition */
+}
+
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+    margin-top: 20px;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 40px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    text-align: left;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+.qr-btn {
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.qr-btn:hover {
+    background-color: #555;
+}
+.qr-code {
+    margin-top: 20px;
+}
+
+.qr-code-cell {
+    text-align: center;
+}

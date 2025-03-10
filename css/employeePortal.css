@@ -1,0 +1,789 @@
+/* General Styles */
+body {
+    background-color: white;
+    color: black;
+    font-size: 16px;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #235437;
+    color: white;
+    padding: 15px 20px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1;
+}
+
+.top-nav .logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.top-nav .top-logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.top-nav .user-info {
+    display: flex;
+    align-items: center;
+}
+
+.top-nav .user-info span {
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.top-nav .user-info {
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout {
+    background-color: #163832;
+    font-size: 16px;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout {
+    background-color: #163832;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+
+
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    font-size: 14px;
+    top: 60px; /* Adjusted for the height of the top nav */
+    left: 0;
+    width: 200px; /* Default width of the sidebar */
+    height: calc(100% - 60px);
+    background-color: #333;
+    padding-top: 20px;
+    z-index: 0;
+    transition: transform 0.5s ease; /* Smooth transition for toggling */
+}
+
+/* Sidebar Hidden State */
+.sidebar-hidden {
+    transform: translateX(-100%); /* Move sidebar out of view */
+}
+
+/* Sidebar List Styling */
+.sidebar ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.sidebar li {
+    margin-bottom: 20px;
+}
+
+/* Sidebar Links */
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    transition: background-color 0.3s ease, padding-left 0.3s ease; /* Smooth transitions */
+}
+
+.sidebar a:hover {
+    /*background-color: #444;*/
+    padding-left: 16px; /* Adds padding when hovering for a visual effect */
+}
+
+/* Sidebar Icons */
+.sidebar i {
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+/* Active Link Styling */
+.sidebar a.active {
+    background-color: #1abc9c; /* Highlight active link */
+}
+
+/* Main Content Area */
+.content {
+    margin-left: 205px; /* Default margin when sidebar is shown */
+    padding: 20px;
+    padding-top: 80px; /* Offset for the top navigation bar */
+    min-height: 100vh;
+    background-color: #f1f1f1;
+    transition: margin-left 0.5s ease; /* Smooth transition for content area */
+}
+
+/* Adjust main content when sidebar is hidden */
+.sidebar-hidden ~ .content {
+    margin-left: 0;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-right: 10px;
+}
+.section h4 {
+    color: #333;
+}
+
+
+.section h3 {
+    color: #333;
+}
+
+
+body.dark-mode .section h3 {
+    color: #fff;
+}
+
+/* Table Styling */
+.balance-table, .leave-approved, .pending-requests {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: white;
+    font-size: 14px;
+}
+
+.balance-table th, .balance-table td,
+.leave-approved th, .leave-approved td,
+.pending-requests th, .pending-requests td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.balance-table th, .leave-approved th, .pending-requests th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.pending-requests button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.pending-requests button:hover {
+    background-color: #d32f2f;
+}
+
+/* Overlay Styling */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay-content {
+    font-size: 14px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.overlay-content h2 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.overlay-content button {
+    padding: 8px 17px;
+    margin: 10px;
+    cursor: pointer;
+}
+
+/* Leave Request Form Styling */
+.open-overlay-button, .submit-leave {
+    background-color: #4CAF50;
+    margin-bottom: 5px;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.submit-leave:hover {
+    background-color: #45a049;
+}
+
+.field-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.field-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.field-group input[type="date"],
+.field-group select,
+.field-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Alert and Message Styles */
+.message, .alert {
+    padding: 15px;
+    background-color: #f44336;
+    color: white;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.alert {
+    background-color: #4CAF50;
+}
+
+/* Heading Styles */
+h4 {
+    font-size: 18px; /* Font size */
+    color: #222; /* Dark color for the text */
+    margin: 20px 0; /* Spacing above and below the heading */
+    font-weight: bold; /* Bold text */
+    text-transform: uppercase; /* Uppercase text */
+    border-bottom: 5px solid #28a745; /* Green underline */
+    padding-bottom: 10px; /* Spacing between the text and the underline */
+    width: 230px;
+}
+
+/* Close Button */
+.close {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    top: 20px;
+    right: 30px;
+    font-size: 28px;
+    color: #666;
+    cursor: pointer;
+}
+
+
+    /* Style the attendance section */
+    #attendance {
+        margin-top: 20px;
+    }
+    
+    .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    
+    .attendance-table th {
+        padding: 10px;
+        text-align: center;
+        color: #fff;
+
+        border: 1px solid #ddd;
+    }
+    .attendance-table td {
+        padding: 10px;
+        text-align: center;
+
+        border: 1px solid #ddd;
+    }
+    
+    .attendance-table th {
+        background-color: #f2f2f2;
+        color: #fff;
+        font-weight: bold;
+    }
+    
+    .attendance-table td {
+        background-color: #fff;
+    }
+    
+    .attendance-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    .attendance-table tr:hover {
+        background-color: #f1f1f1;
+    }
+    
+    .attendance-table td span {
+        display: inline-block;
+        word-wrap: break-word;
+        max-width: 150px;
+    }
+    
+    .attendance-table td {
+        font-size: 14px;
+        color: #333;
+    }
+    
+
+
+
+body.dark-mode .attendance-table th, body.dark-mode .attendance-table td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+    
+    .attendance-table th {
+        background-color: #4CAF50;
+        font-weight: bold;
+    }
+    
+    body.dark-mode .attendance-table td {
+        font-size: 14px;
+
+        background-color: #333;
+    }
+    
+    body.dark-mode .attendance-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    body.dark-mode .attendance-table tr:hover {
+        background-color: #f1f1f1;
+    }
+    
+
+    
+   
+    /* Form Container */
+.filter-form {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+}
+
+/* Label Styles */
+.form-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+/* Label Styles */
+body.dark-mode .form-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+/* Input Fields Styles */
+.form-input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: #e7efec;
+    box-shadow: 0 0 5px rgba(26, 188, 156, 0.5);
+}
+
+/* Button Styles */
+.submit-button {
+    background-color: #1abc9c;
+    color: white;
+    font-size: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #16a085;
+}
+
+.submit-button:active {
+    background-color: #1abc9c;
+}
+/* General Styles */
+body {
+    background-color: white;
+    color: black;
+    font-size: 16px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #121212; /* Dark background */
+    color: white; /* Light text color */
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #235437;
+    color: white;
+    padding: 15px 20px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1;
+    transition: background-color 0.3s;
+}
+
+/* Dark Mode Top Navigation */
+body.dark-mode .top-nav {
+    background-color: #1a1a1a; /* Darker top nav background */
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    font-size: 14px;
+    top: 60px; /* Adjusted for the height of the top nav */
+    left: 0;
+    width: 200px; /* Default width of the sidebar */
+    height: calc(100% - 60px);
+    background-color: #333;
+    padding-top: 20px;
+    z-index: 0;
+    transition: transform 0.5s ease, background-color 0.3s ease; /* Smooth transition for toggling */
+}
+
+/* Dark Mode Sidebar */
+body.dark-mode .sidebar {
+    background-color: #1a1a1a; /* Dark sidebar background */
+}
+
+/* Sidebar Links */
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    transition: background-color 0.3s ease, padding-left 0.3s ease; /* Smooth transitions */
+}
+
+/* Dark Mode Sidebar Links */
+body.dark-mode .sidebar a {
+    color: #ccc; /* Lighter text color */
+}
+
+/* Active Link Styling */
+.sidebar a.active {
+    background-color: #1abc9c; /* Highlight active link */
+}
+
+/* Dark Mode Active Link */
+body.dark-mode .sidebar a.active {
+    background-color: #4CAF50; /* Adjusted highlight for dark mode */
+}
+
+/* Main Content Area */
+.content {
+    margin-left: 205px; /* Default margin when sidebar is shown */
+    padding: 20px;
+    padding-top: 80px; /* Offset for the top navigation bar */
+    min-height: 100vh;
+    background-color: #f1f1f1;
+    transition: margin-left 0.5s ease, background-color 0.3s ease;
+}
+
+/* Dark Mode Main Content */
+body.dark-mode .content {
+    background-color: #181818; /* Dark content background */
+    color: #ddd; /* Lighter text color */
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+/* Dark Mode Sidebar Toggle Button */
+body.dark-mode .sidebar-toggle-button {
+    color: #ccc; /* Lighter color for dark mode */
+}
+
+/* Table Styling */
+.balance-table, .leave-approved, .pending-requests {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: white;
+}
+
+/* Dark Mode Table */
+body.dark-mode .balance-table, 
+body.dark-mode .leave-approved, 
+body.dark-mode .pending-requests {
+    background-color: #333; /* Dark background for tables */
+    color: white; /* Light text color */
+}
+
+.balance-table th, .balance-table td,
+.leave-approved th, .leave-approved td,
+.pending-requests th, .pending-requests td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+/* Dark Mode Table Headers */
+body.dark-mode .balance-table th, 
+body.dark-mode .leave-approved th, 
+body.dark-mode .pending-requests th {
+    background-color: #4CAF50; /* Highlighted dark mode header */
+}
+
+/* Leave Request Form Styling */
+.open-overlay-button, .submit-leave {
+    background-color: #4CAF50;
+    margin-bottom: 5px;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Dark Mode Form Buttons */
+body.dark-mode .open-overlay-button, 
+body.dark-mode .submit-leave {
+    background-color: #2C6B38; /* Darker green for buttons in dark mode */
+}
+
+/* Alert and Message Styles */
+.message, .alert {
+    padding: 15px;
+    background-color: #f44336;
+    color: white;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Dark Mode Alerts */
+body.dark-mode .message, 
+body.dark-mode .alert {
+    background-color: #333; /* Dark background for messages */
+    color: white; /* Light text color */
+}
+
+.alert {
+    background-color: #4CAF50;
+}
+
+/* Heading Styles */
+h4 {
+    font-size: 18px;
+    color: #222;
+    margin: 20px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 5px solid #28a745;
+    padding-bottom: 10px;
+    width: 230px;
+}
+
+/* Dark Mode Heading */
+body.dark-mode h4 {
+    color: #ddd; /* Lighter heading text in dark mode */
+    border-bottom: 5px solid #4CAF50; /* Adjusted color for underline */
+}
+
+/* Table Styling for Attendance */
+.attendance-table th, .attendance-table td {
+    padding: 10px;
+    text-align: center;
+}
+
+/* Dark Mode Table for Attendance */
+body.dark-mode .attendance-table th,
+body.dark-mode .attendance-table td {
+    color: #ddd; /* Lighter text for attendance table */
+    border-color: #444; /* Darker borders */
+}
+
+/* Optional: Styling for status colors in dark mode 
+body.dark-mode .attendance-table td[data-status="Present"] {
+    color: lightgreen;
+}
+
+body.dark-mode .attendance-table td[data-status="Absent"] {
+    color: darkred;
+}
+
+body.dark-mode .attendance-table td[data-status="Leave"] {
+    color: darkorange;
+}
+
+body.dark-mode .attendance-table td[data-status="Overtime"] {
+    color: lightblue;
+}
+
+body.dark-mode .attendance-table td[data-status="Late"] {
+    color: darkgoldenrod;
+}*/
+
+/* Filter Form */
+.filter-form {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+}
+
+/* Dark Mode Filter Form */
+body.dark-mode .filter-form {
+    background-color: #333; /* Dark filter form background */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7); /* Darker shadow */
+}
+
+/* Input Fields Styling */
+.form-input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Dark Mode Form Input Fields */
+body.dark-mode .form-input {
+    background-color: #333; /* Dark background for input */
+    color: white; /* Light text */
+    border-color: #555; /* Darker border */
+}
+
+/* Button Styles */
+.submit-button {
+    background-color: #1abc9c;
+    color: white;
+    font-size: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+/* Dark Mode Button */
+body.dark-mode .submit-button {
+    background-color: #4CAF50; /* Green background for dark mode buttons */
+}
+
+
+
+/* Styling for the dark mode toggle button */
+.dark-mode-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px; /* Set consistent size for the button */
+    cursor: pointer;
+    padding: 5px;
+    margin-right: 15px;
+}
+
+/* Icon size adjustment to ensure consistency */
+.dark-mode-toggle i {
+    font-size: 18px; /* Set the consistent size for sun and moon icons */
+    transition: color 0.3s ease; /* Optional smooth color transition */
+}
+
+/* Optional: Icon transition effect when changing */
+.dark-mode-toggle i {
+    font-size: 18px; /* Consistent icon size for both sun and moon */
+}
+h5 {
+    color: #333;
+    margin-bottom: 10px;
+}
+body.dark-mode h5 {
+    color: #222;
+    margin-bottom: 10px;
+}

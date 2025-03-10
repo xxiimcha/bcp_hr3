@@ -1,0 +1,276 @@
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f4f9;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+}
+
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: #333;
+    padding: 10px 20px;
+}
+
+.navbar ul {
+    display: flex;
+    list-style: none;
+}
+
+.navbar li {
+    margin-left: 20px;
+}
+
+.nav-btn {
+    background-color: #5C6BC0;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #3F51B5;
+}
+
+.dark-mode-toggle {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 10px;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.container .logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.container .plogo {
+    max-width: 100px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+select:focus {
+    border-color: #5C6BC0;
+    outline: none;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container label {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+}
+
+input[type="checkbox"] {
+    margin: 0;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #5C6BC0;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #3F51B5;
+}
+
+#switchToEmployeeBtn, #switchToAdminBtn {
+    background-color: transparent;
+    border: none;
+    color: #5C6BC0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#switchToEmployeeBtn:hover, #switchToAdminBtn:hover {
+    color: #3F51B5;
+}
+
+/* Forgot Password Section */
+#forgotPasswordSection {
+    display: none;
+    margin-top: 20px;
+}
+
+#forgotPasswordSection form {
+    display: flex;
+    flex-direction: column;
+}
+
+hr {
+    margin: 20px 0;
+    border: 1px solid #ddd;
+}
+
+/* Popup Styles */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popup.show {
+    display: flex;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.popup-content p {
+    font-size: 18px;
+}
+
+.popup-content button {
+    margin-top: 15px;
+    background-color: #5C6BC0;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.popup-content button:hover {
+    background-color: #3F51B5;
+}
+
+/* Success Popup */
+#successPopup .popup-content {
+    background-color: #35B535;
+    color: #fff;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .navbar {
+    background-color: #333;
+}
+
+body.dark-mode .navbar .nav-btn,
+body.dark-mode .dark-mode-toggle {
+    background-color: #444;
+}
+
+body.dark-mode .container {
+    background-color: #333;
+    color: #fff;
+}
+
+body.dark-mode input,
+body.dark-mode select {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+body.dark-mode button {
+    background-color: #444;
+    color: #fff;
+}
+
+body.dark-mode #switchToEmployeeBtn,
+body.dark-mode #switchToAdminBtn {
+    color: #fff;
+}
+
+body.dark-mode .popup-content {
+    background-color: #555;
+}
+
+body.dark-mode .popup-content button {
+    background-color: #333;
+}

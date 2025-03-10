@@ -1,0 +1,866 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    font-family: Arial,  sans-serif;
+  
+  }
+  
+  body.dark-mode {
+    background-color:#121212;
+    color: rgb(255, 255, 255);
+    
+  }
+  
+  
+  .logopos {
+    
+    text-align: center;
+    font-size: 24px;
+    color:#35B535;
+    margin: 0;
+    padding-left:  15px;
+    padding-top: 0px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    font-family: Arial,  sans-serif;
+    line-height: 1; /* Adjust line height to reduce spacing */
+  }
+  
+  body.dark-mode .logopos {
+    color: #00c300;
+  }
+  
+  
+  
+  
+  .top-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .top-nav {
+    margin: 0;
+    padding-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: transparent;
+    color: white;
+  }
+  
+  body.dark-mode .top-nav {
+    background-color: transparent;
+  }
+  
+  .top {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    color: #000000;
+    font-size: 16px;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    transition: color 0.30s;
+  }
+  
+  body.dark-mode .top {
+    color:white;
+  }
+  
+  a {
+    text-decoration: none;
+    color: #efefee;
+    font-size: 16px;
+  }
+  
+  body.dark-mode a {
+    color: #ffffff;
+  }
+  
+  .logout {
+    justify-content: end;
+    font-size: 14px;
+    color: rgb(253, 253, 253);
+    background-color: rgb(143, 10, 10);
+    border: none;
+    padding: 10px 10px;
+    cursor: pointer;
+    margin-left: 30px;
+    align-self: center;
+    border-radius: 14px;
+  }
+  
+  body.dark-mode .logout {
+    background-color: rgb(150, 0, 0);
+    color: #fff;
+  }
+  
+  .top-nav ul, .logout {
+    display: flex;
+    align-items: center;
+  }
+  
+  .top:hover {
+    color: rgb(255, 255, 255);
+  }
+  
+  body.dark-mode .top:hover {
+    color: #222;
+  }
+  
+  .content {
+    flex: 1;
+    padding: 20px;
+    background-color: #f4f4f4;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+  
+  body.dark-mode .content {
+    background-color: #333;
+    color: white;
+  }
+  
+  .top1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #0c0;
+  }
+  
+  body.dark-mode .top1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #007a00;
+  }
+  
+  .top1:hover {
+    color: yellow;
+  }
+  
+  body.dark-mode .top1:hover {
+    color: black;
+  }
+  
+  .top:after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    background-color:  #35B535;
+    scale: 1 0;
+    z-index: -1;
+    transition: 0.10s;
+    border-radius: 10px;
+    color:#383838;
+  }
+  
+  body.dark-mode .top:after {
+    background-color:#008a00;
+  }
+  
+  .top:hover:after {
+    scale: 1 1;
+  }
+  
+  .top1dropdown {
+    display: none; /* Initially hidden */
+    position: fixed; /* Position relative to the viewport */
+    top: 55px; /* Align below the top-nav */
+    left: 0; /* Align to the left edge of the screen */
+    right: 0; /* Align to the right edge of the screen */
+    background-color: #E5E4E2;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    z-index: 1000; /* Ensure it overlays other elements */
+    color: black;
+    transition: opacity 0.3s ease;
+  }
+  
+  body.dark-mode .top1dropdown {
+    background-color: #242526;
+    color: #007a00;
+  }
+  
+  .top:hover .top1dropdown {
+    display: block;
+  }
+  
+  .dropdown-column {
+    justify-content:space-evenly;
+    width: 18%;
+    float: left;
+    margin-right: 30px;
+  }
+  
+  
+  
+  .dropdown-column a {
+    padding: 8px 0;
+    display: block;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  
+  body.dark-mode .dropdown-column h3:hover{
+    color:#00d400;
+    
+  }
+  
+  .dropdown-column h3:hover{
+    color: #00d400;
+  }
+  
+  
+  body.dark-mode .dropdown-column a {
+    color: white;
+  }
+  
+  .dropdown-column a:hover {
+    color: #35B535;
+  }
+  
+  .dropdown::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  
+  
+  body.dark-mode .dropdown-column a:hover {
+    color: #0d74da; /* Consistent hover color for dark mode */
+  }
+  
+  @media (max-width: 768px) {
+    .top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+  
+    .top1dropdown {
+        position: static;
+        width: 100%;
+    }
+  
+    .dropdown-column {
+        width: 100%;
+        margin: 0;
+    }
+  }
+  
+  /* Keep hover color persistent when the dropdown is visible */
+  .top:hover .top1, 
+  .top .top1dropdown:hover .top1 {
+  color:black; /* Color when hovered */
+  }
+  
+  body.dark-mode .top1:hover, 
+  body.dark-mode .top:hover .top1, 
+  body.dark-mode .top .top1dropdown:hover .top1 {
+  color: white; /* Light color in dark mode */
+  display: block; /* Keep it displayed when hovering over the dropdown */
+  }
+  
+  
+  
+  body.dark-mode .dark-mode-toggle:hover{
+    background-color:#007a00;
+    color:rgb(255, 255, 255);
+  }
+  .logout:hover{
+    background-color: #333;
+  }
+  body.dark-mode .logout:hover{
+    background-color: #333;
+  }
+  
+  .dark-mode-toggle{
+    color: #fff;
+    background-color:  #18191A;
+    font-size: 14px;
+    border-radius: 20px;
+    border:none;
+    padding:8px 8px;
+  }
+  
+  .dark-mode-toggle:hover{
+    background-color:#00f400;
+  }
+  
+  body.dark-mode .dark-mode-toggle{
+    background-color: white;
+    color:black;
+  }
+  
+  
+  
+  /* Styling the select element to align with other links in the dropdown */
+  .styled-select {
+    background-color: transparent;
+    color: #333; /* Same as the links */
+    font-size: 18px; /* Same as the links */
+    font-weight:500;
+    border: none;
+    width: 100%;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: 12px; /* Match spacing with the links */
+  }
+  
+  body.dark-mode .styled-select {
+    color: white; /* Consistent color in dark mode */
+    border-color: white; /* Border color for dark mode */
+  }
+  
+  .styled-select option {
+    background-color: white;
+    color: #333;
+    padding: 8px;
+  }
+  
+  .styled-select option:hover{
+  color: #00d400;
+  
+  }
+  
+  body.dark-mode .styled-select option {
+    background-color: #242526;
+    color: white;
+  }
+  
+  /* Hover and focus effects for the select box */
+  .styled-select:hover,
+  .styled-select:focus {
+    border-color: #00d400; /* Match hover color */
+  }
+  
+  /* Aligning the select element inside dropdown-column */
+  .dropdown-column {
+    justify-content: space-evenly;
+    width: 18%;
+    float: left;
+    margin-right: 30px;
+  }
+  
+  .dropdown-column h3 {
+    font-size: 16px;
+    font-weight: 400; 
+    margin-bottom: 12px;
+    color: #262626;
+  }
+  
+  body.dark-mode .dropdown-column h3 {
+    font-size: 16px;
+    color:#E5E4E2;
+  }
+  
+  /* Ensure links and select dropdown have consistent styles */
+  .dropdown-column a, .styled-select {
+    padding: 8px 0;
+    display: block;
+    font-size: 16px;
+    color: #333;
+    text-decoration: none;
+  }
+  
+  body.dark-mode .dropdown-column a, body.dark-mode .styled-select {
+    color: white;
+  }
+  
+  /* Hover effect for links and select in dark mode */
+  .dropdown-column a:hover, .styled-select:hover {
+    color: #00d400;
+  }
+  
+  body.dark-mode .dropdown-column a:hover, body.dark-mode .styled-select:hover {
+    color: #12E772;
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  /* Overlay for the dialog */
+  .dialog-overlay {
+    display: none; /* Use flexbox to center the dialog */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    position: fixed; /* Fixed position to cover the whole viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    z-index: 999; /* Ensure it is above other content */
+  }
+  
+  /* Styling the dialog content */
+  .dialog-content {
+    background-color: #fff; /* White background for the dialog */
+    padding: 20px; /* Padding inside the dialog */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    text-align: center; /* Center text */
+  }
+  
+  /* Header of the dialog */
+  .dialog-content h3 {
+    margin: 0 0 15px; /* Margin below the header */
+    color: #0c0; /* Dark text color */
+  }
+  
+  /* Buttons container */
+  .dialog-buttons {
+    display: flex; /* Use flexbox for button alignment */
+    justify-content: center; /* Center buttons */
+    gap: 10px; /* Space between buttons */
+  }
+  
+  /* Styling buttons */
+  .dialog-buttons button {
+    background-color: #35B535; /* Green background */
+    color: white; /* White text */
+    border: none; /* Remove default border */
+    border-radius: 20px; /* Consistent rounded corners */
+    padding: 10px 15px; /* Padding inside buttons */
+    font-size: 16px; /* Font size for buttons */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth transition for background color */
+  }
+  
+  /* Button hover effect */
+  .dialog-buttons button:hover {
+    background-color: #28a745; /* Darker green on hover */
+  }
+  
+  /* Cancel button style */
+  .dialog-buttons .cancel {
+    background-color: #f44336; /* Red background for cancel button */
+  }
+  
+  .dialog-buttons .cancel:hover {
+    background-color: #da190b; /* Darker red on hover */
+  }
+  
+  /* Dark mode dialog styles */
+  body.dark-mode .dialog-content {
+    background-color: #333; /* Dark background for the dialog */
+    color: #fff; /* White text color */
+  }
+  
+  /* Dark mode button styles */
+  body.dark-mode .dialog-buttons button {
+    background-color: #35B535; /* Keep the same green background for dark mode */
+    color: white; /* Keep white text for dark mode */
+  }
+  
+  body.dark-mode .dialog-buttons button:hover {
+    background-color: #28a745; /* Keep the same darker green hover effect for dark mode */
+  }
+  
+  body.dark-mode .dialog-buttons .cancel {
+    background-color: #f44336; /* Keep the same red background for cancel button in dark mode */
+  }
+  
+  body.dark-mode .dialog-buttons .cancel:hover {
+    background-color: #da190b; /* Keep the same darker red hover effect in dark mode */
+  }
+  
+  
+  
+  /* Admin Section and Dropdown */
+  .admin-section {
+  position: relative; /* Positioning for the dropdown */
+  }
+  
+  .admin-name {
+  font-size: 16px;
+  color: #0c0;
+  padding: 10px;
+  cursor: pointer;
+  }
+  
+  .admin-name:hover {
+  color: #00d400;
+  }
+  
+  /*Styles for Light Mode */
+  .admin-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: lightgray; /* Same background color for both light and dark mode */
+  width: 110%;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  z-index: 1000;
+  color: #333; /* Font color for light mode */
+  font-size: 14px;
+  transition: opacity 0.3s ease;
+  }
+  
+  .admin-name:hover .admin-dropdown-content {
+  display: block; /* Show dropdown on hover */
+  }
+  
+  .admin-dropdown-content a {
+  color: #333; /* Font color for light mode */
+  text-decoration: none;
+  display: block;
+  padding: 8px 0;
+  }
+  
+  .admin-dropdown-content a:hover {
+  color: #12E772;
+  }
+  
+  /* Dark Mode Styles */
+  body.dark-mode .admin-dropdown-content {
+  background-color: #333; /* Dark background for dropdown */
+  }
+  
+  body.dark-mode .admin-dropdown-contentt a {
+  color: #fff; /* Light font color in dark mode */
+  }
+  
+  body.dark-mode .admin-dropdown-content a:hover {
+  color: #12E772; /* Hover color consistent for dark mode */
+  }
+  
+  footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  margin-top: 20px;
+  }
+  
+  body.dark-mode footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #222;
+  margin-top: 20px;
+  }
+  
+  /*----------------------------------------------------------------------------------------------------*/
+
+
+
+
+main {
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.shift-types-table {
+
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+
+.shift-types-table th,
+.shift-types-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.shift-types-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.shift-types-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.shift-types-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+@media (max-width: 768px) {
+    .shift-types-table {
+        font-size: 14px;
+    }
+}
+
+
+body.dark-mode .shift-types-table {
+    background-color: #2c2c2c; /* Dark table background */
+    border-color: #444; /* Darker border for table */
+}
+
+body.dark-mode .shift-types-table th,
+body.dark-mode .shift-types-table td {
+    border: 1px solid #444; /* Darker border for th and td */
+}
+
+body.dark-mode .shift-types-table th {
+    background-color: #333; /* Darker header background */
+}
+
+body.dark-mode .shift-types-table tr:nth-child(even) {
+    background-color: #3a3a3a; /* Darker even rows */
+}
+
+body.dark-mode .shift-types-table tr:hover {
+    background-color: #555;
+}
+
+
+.shift-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Ensure it's on top of other elements */
+}
+
+.shift-overlay-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px; /* Adjust as needed */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.close-button {
+    cursor: pointer;
+    font-size: 24px;
+    color: #333;
+    float: right; /* Positioning the close button */
+}
+
+.shift-button {
+    margin: 20px 0; /* Space above the button */
+    padding: 10px 15px;
+    background-color: #4CAF50; /* Green background */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.shift-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+
+.add-shift-button {
+    margin: 20px 0; /* Space above the button */
+    padding: 10px 15px;
+    background-color: #4CAF50; /* Green background */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-shift-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+.update-shift-button {
+  margin: 20px 0; /* Space above the button */
+  padding: 10px 15px;
+  background-color: #4CAF50; /* Green background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-shift-button:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
+
+
+.close-button {
+    color: #aaa; /* Close button color */
+    float: right; /* Right align */
+    font-size: 28px; /* Font size */
+    font-weight: bold; /* Bold */
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black; /* Darker color on hover/focus */
+    text-decoration: none; /* No underline */
+    cursor: pointer; /* Pointer cursor */
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    margin-top: 10px; /* Margin for labels */
+}
+
+form input {
+    padding: 10px; /* Padding for inputs */
+    margin-top: 5px; /* Margin for inputs */
+    border: 1px solid #ccc; /* Border */
+    border-radius: 5px; /* Rounded corners */
+}
+
+
+/* Dark Mode Styles */
+body.dark-mode .shift-overlay-content {
+    background: #2c2c2c; /* Dark background for overlay content */
+    color: #fff; /* White text */
+}
+
+body.dark-mode .close-button {
+    color: #ccc; /* Lighter color for close button in dark mode */
+}
+
+body.dark-mode .shift-button,
+body.dark-mode .add-shift-button {
+    background-color: #3e8e41; /* Darker green for buttons in dark mode */
+    color: white;
+}
+
+body.dark-mode .shift-button:hover,
+body.dark-mode .add-shift-button:hover {
+    background-color: #4caf50; /* Lighter green on hover in dark mode */
+}
+
+body.dark-mode form input {
+    border: 1px solid #555; /* Darker border for inputs in dark mode */
+    background: #444; /* Darker background for inputs in dark mode */
+    color: white; /* White text for inputs in dark mode */
+}
+
+.message {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #4caf50; /* Green border for success */
+    background-color: #dff0d8; /* Light green background */
+    color: #3c763d; /* Dark green text */
+    border-radius: 5px;
+}
+.update-button,
+.delete-button {
+    padding: 8px 12px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.update-button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.update-button:hover {
+    background-color: #45a049; /* Darker green */
+}
+
+.delete-button {
+    background-color: #f44336; /* Red */
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #d32f2f; /* Darker red */
+}
+/* Overlay for the dialog */
+.delete-dialog-overlay {
+  position: fixed; /* Position it fixed to cover the whole screen */
+  top: 0;
+  left: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  display: flex; /* Center contents */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's on top */
+}
+
+/* Content area for the dialog */
+.delete-dialog-content {
+  background-color: white; /* White background for content */
+  padding: 20px; /* Padding around content */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  width: 400px; /* Fixed width */
+  text-align: center; /* Center text */
+}
+
+/* Button styles */
+.dialog-buttons {
+  margin-top: 20px; /* Space above the buttons */
+}
+
+#confirm-delete-button,
+#cancel-delete-button {
+  padding: 10px 15px; /* Padding for buttons */
+  margin: 5px; /* Space between buttons */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer on hover */
+  transition: background-color 0.3s; /* Smooth background color transition */
+}
+
+#confirm-delete-button {
+  background-color: #d9534f; /* Bootstrap danger color */
+  color: white; /* White text */
+}
+
+#confirm-delete-button:hover {
+  background-color: #c9302c; /* Darker shade on hover */
+}
+
+#cancel-delete-button {
+  background-color: #f0f0f0; /* Light gray */
+  color: #333; /* Dark gray text */
+}
+
+#cancel-delete-button:hover {
+  background-color: #e0e0e0; /* Darker gray on hover */
+}
+
+/* Dark mode styles */
+body.dark-mode .delete-dialog-content {
+  background-color: #333; /* Dark background */
+  color: #f0f0f0; /* Light text */
+}
+
+body.dark-mode #confirm-delete-button {
+  background-color: #c9302c; /* Darker red for dark mode */
+}
+
+body.dark-mode #cancel-delete-button {
+  background-color: #555; /* Darker gray for dark mode */
+  color: #fff; /* Light text for dark mode */
+}
+
+body.dark-mode #cancel-delete-button:hover {
+  background-color: #666; /* Slightly lighter gray on hover */
+}
