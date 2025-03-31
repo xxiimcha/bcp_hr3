@@ -8,29 +8,29 @@ if (!isset($_SESSION['username'])) {
 }
 
 $username = $_SESSION['username'];
+$employee_info = null;
+$leave_records = [];
+$leave_balances = [];
+$message = "";
 
-// Check if employee_id is set
+// Get employee_no from URL
 if (isset($_GET['employee_id'])) {
-    $employee_id = $_GET['employee_id'];
+    $employee_no = $_GET['employee_id'];
 
-    // Fetch specific employee info along with department name using JOIN
-    $query = "
-        SELECT ei.*, d.department_name 
-        FROM employee_info ei
-        JOIN departments d ON ei.department_id = d.department_id
-        WHERE ei.employee_id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $employee_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Fetch data if available
-    $employee_info = $result->fetch_assoc();
-    $stmt->close();
-
-    // Fetch leave records for the specific employee
-    $leave_records = [];
-    $leave_balances = [];
+    // Fetch employee data from API
+    $api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+    $response = file_get_contents($api_url);
+    if ($response !== false) {
+        $data = json_decode($response, true);
+        if (isset($data['data'])) {
+            foreach ($data['data'] as $emp) {
+                if ($emp['employee_no'] === $employee_no) {
+                    $employee_info = $emp;
+                    break;
+                }
+            }
+        }
+    }
 
     // Fetch leave records
     $leave_query = "
@@ -39,26 +39,27 @@ if (isset($_GET['employee_id'])) {
         JOIN leave_types lt ON el.leave_id = lt.leave_id
         WHERE el.employee_id = ?";
     $leave_stmt = $conn->prepare($leave_query);
-    $leave_stmt->bind_param("i", $employee_id);
+    $leave_stmt->bind_param("s", $employee_no);
     $leave_stmt->execute();
     $leave_result = $leave_stmt->get_result();
     $leave_records = $leave_result->fetch_all(MYSQLI_ASSOC);
     $leave_stmt->close();
-    
-    // Fetch leave balances for the specific employee
+
+    // Fetch leave balances
     $balance_query = "
         SELECT elb.leave_code, lt.leave_type, elb.balance 
         FROM employee_leave_balances elb
-        JOIN leave_types lt ON elb.leave_code = lt.leave_code
+        JOIN leave_types lt ON elb.leave_code = lt.leave_id
         WHERE elb.employee_id = ?";
     $balance_stmt = $conn->prepare($balance_query);
-    $balance_stmt->bind_param("i", $employee_id);
+    $balance_stmt->bind_param("s", $employee_no);
     $balance_stmt->execute();
     $balance_result = $balance_stmt->get_result();
     $leave_balances = $balance_result->fetch_all(MYSQLI_ASSOC);
     $balance_stmt->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -71,178 +72,168 @@ if (isset($_GET['employee_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-
 <main>
 <?php if (!empty($message)): ?>
     <div class="message-panel">
         <?php echo htmlspecialchars($message); ?>
     </div>
 <?php endif; ?>
-    <?php if (isset($employee_info)): ?>
-        <div class="employee-info-panel">
-            <a href="leave-record.php" class="back-button"><i class="fas fa-arrow-left"></i></a>
-            <center><h2>Employee Information</h2><br></center>
-            <form class="employee-info-form">
-                <div class="form-group">
-                    <div class="form-column">
-                        <label for="employee_id">Employee ID</label>
-                        <input type="text" id="employee_id" value="<?php echo htmlspecialchars($employee_info['employee_id']); ?>" readonly>
 
-                        <label for="employee_name">Employee Name</label>
-                        <input type="text" id="employee_name" value="<?php echo htmlspecialchars($employee_info['employee_name']); ?>" readonly>
+<?php if (isset($employee_info)): ?>
+    <div class="employee-info-panel">
+        <a href="leave-record.php" class="back-button"><i class="fas fa-arrow-left"></i></a>
+        <center><h2>Employee Information</h2><br></center>
+        <form class="employee-info-form">
+            <div class="form-group">
+                <div class="form-column">
+                    <label for="employee_id">Employee ID</label>
+                    <input type="text" id="employee_id" value="<?= htmlspecialchars($employee_info['employee_no']) ?>" readonly>
 
-                        <label for="date_of_birth">Date of Birth</label>
-                        <input type="text" id="date_of_birth" value="<?php echo htmlspecialchars($employee_info['date_of_birth']); ?>" readonly>
+                    <label for="employee_name">Employee Name</label>
+                    <input type="text" id="employee_name" value="<?= htmlspecialchars($employee_info['firstname'] . ' ' . $employee_info['lastname']) ?>" readonly>
 
-                        <label for="email_address">Email Address</label>
-                        <input type="email" id="email_address" value="<?php echo htmlspecialchars($employee_info['email_address']); ?>" readonly>
-                    </div>
+                    <label for="date_of_birth">Date of Birth</label>
+                    <input type="text" id="date_of_birth" value="<?= htmlspecialchars($employee_info['birthdate']) ?>" readonly>
 
-                    <div class="form-column">
-                        <label for="department">Department</label>
-                        <input type="text" id="department" value="<?php echo htmlspecialchars($employee_info['department_name']); ?>" readonly>
-
-                        <label for="position">Position</label>
-                        <input type="text" id="position" value="<?php echo htmlspecialchars($employee_info['position']); ?>" readonly>
-
-                        <label for="contact_no">Contact No</label>
-                        <input type="text" id="contact_no" value="<?php echo htmlspecialchars($employee_info['contact_no']); ?>" readonly>
-
-                        <label for="address">Address</label>
-                        <textarea id="address" readonly><?php echo htmlspecialchars($employee_info['address']); ?></textarea>
-                    </div>
+                    <label for="email_address">Email Address</label>
+                    <input type="email" id="email_address" value="<?= htmlspecialchars($employee_info['email']) ?>" readonly>
                 </div>
 
-                <div class="form-group">
-                    <label for="date_hired">Date Hired</label>
-                    <input type="text" id="date_hired" value="<?php echo htmlspecialchars($employee_info['date_hired']); ?>" readonly>
+                <div class="form-column">
+                    <label for="department">Department</label>
+                    <input type="text" id="department" value="<?= htmlspecialchars($employee_info['position']) ?>" readonly>
 
-                    <label for="status">Status</label>
-                    <input type="text" id="status" value="<?php echo htmlspecialchars($employee_info['status']); ?>" readonly>
+                    <label for="position">Position</label>
+                    <input type="text" id="position" value="<?= htmlspecialchars($employee_info['position']) ?>" readonly>
+
+                    <label for="contact_no">Contact No</label>
+                    <input type="text" id="contact_no" value="<?= htmlspecialchars($employee_info['number']) ?>" readonly>
+
+                    <label for="address">Address</label>
+                    <textarea id="address" readonly><?= htmlspecialchars($employee_info['address']) ?></textarea>
                 </div>
-            </form>
-        </div>
+            </div>
 
-        <!-- Records Panel -->
-        <div class="records-panel">
-            <h3>Leave Records</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Total Days</th>
-                        <th>Remarks</th>
-                        <th>Status</th>
-                        <th>Action</th> <!-- New Action Column -->
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($leave_records)): ?>
-                        <?php foreach ($leave_records as $record): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($record['leave_type']); ?></td>
-                                <td><?php echo htmlspecialchars($record['start_date']); ?></td>
-                                <td><?php echo htmlspecialchars($record['end_date']); ?></td>
-                                <td><?php echo htmlspecialchars($record['total_days']); ?></td>
-                                <td><?php echo htmlspecialchars($record['remarks']); ?></td>
-                                <td><?php echo htmlspecialchars($record['status']); ?></td>
-                                <td>
-                                    <!-- Delete Button Form -->
-                                    <form action="delete-leave-records.php" method="POST" onsubmit="return confirm('Are you sure you want to delete this leave record?');">
-                                        <input type="hidden" name="record_id" value="<?php echo $record['record_id']; ?>">
-                                        <button type="submit" class="delete-button">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7">No leave records found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+            <div class="form-group">
+                <label for="date_hired">Date Hired</label>
+                <input type="text" id="date_hired" value="<?= htmlspecialchars($employee_info['created_at']) ?>" readonly>
 
-        <center>
-    <!-- Leave Balances Panel -->
-<div class="balances-panel">
-
-
-
-<!-- Add Leave Balance Overlay -->
-<div class="balance-overlay" id="balance-overlay">
-    <!-- Add Leave Balance Form -->
-    <div id="add-leave-balance-form">
-        <h4>Add Leave Balance</h4><hr>
-        <form action="add-leave-balance.php" method="POST">
-            <label for="leave_code">Leave Type</label>
-            <select name="leave_code" id="leave_code" required>
-                <option value="">Select Leave Type</option>
-                <?php
-                // Fetch leave types from the database
-                $leave_types_query = "SELECT leave_code, leave_type FROM leave_types";
-                $leave_types_result = $conn->query($leave_types_query);
-
-                if ($leave_types_result->num_rows > 0) {
-                    while ($row = $leave_types_result->fetch_assoc()) {
-                        echo '<option value="' . htmlspecialchars($row['leave_code']) . '">' . htmlspecialchars($row['leave_type']) . '</option>';
-                    }
-                }
-                ?>
-            </select>
-
-            <label for="balance">Balance</label>
-            <input type="number" name="balance" id="balance" min="1" required>
-
-            <input type="hidden" name="employee_id" value="<?php echo htmlspecialchars($employee_id); ?>">
-
-            <button type="submit">Add Balance</button>
-            <button type="button" id="cancel-btn">Cancel</button>
+                <label for="status">Status</label>
+                <input type="text" id="status" value="<?= htmlspecialchars($employee_info['status']) ?>" readonly>
+            </div>
         </form>
     </div>
-</div>
 
-
-    <h3>Leave Balances</h3>
-
-    <?php if (!in_array($employee_info['status'], ['Part-time', 'Contractual'])): ?>
-    <button id="add-leave-balance-btn">Add Leave Balance</button>
-<?php endif; ?>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Leave Type</th>
-                <th>Balance</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($leave_balances)): ?>
-                <?php foreach ($leave_balances as $balance): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($balance['leave_type']); ?></td>
-                        <td><?php echo htmlspecialchars($balance['balance']); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
+    <!-- Records Panel -->
+    <div class="records-panel">
+        <h3>Leave Records</h3>
+        <table>
+            <thead>
                 <tr>
-                    <td colspan="2">No leave balances found.</td>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Total Days</th>
+                    <th>Remarks</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php if (!empty($leave_records)): ?>
+                    <?php foreach ($leave_records as $record): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($record['leave_type']) ?></td>
+                            <td><?= htmlspecialchars($record['start_date']) ?></td>
+                            <td><?= htmlspecialchars($record['end_date']) ?></td>
+                            <td><?= htmlspecialchars($record['total_days']) ?></td>
+                            <td><?= htmlspecialchars($record['remarks']) ?></td>
+                            <td><?= htmlspecialchars($record['status']) ?></td>
+                            <td>
+                                <form action="delete-leave-records.php" method="POST" onsubmit="return confirm('Are you sure you want to delete this leave record?');">
+                                    <input type="hidden" name="record_id" value="<?= $record['record_id'] ?>">
+                                    <button type="submit" class="delete-button">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7">No leave records found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 
-   
-</div>
+    <center>
+    <!-- Leave Balances Panel -->
+    <div class="balances-panel">
+        <!-- Add Leave Balance Overlay -->
+        <div class="balance-overlay" id="balance-overlay">
+            <div id="add-leave-balance-form">
+                <h4>Add Leave Balance</h4><hr>
+                <form action="add-leave-balance.php" method="POST">
+                    <label for="leave_code">Leave Type</label>
+                    <select name="leave_code" id="leave_code" required>
+                        <option value="">Select Leave Type</option>
+                        <?php
+                        $leave_types_query = "SELECT leave_code, leave_type FROM leave_types";
+                        $leave_types_result = $conn->query($leave_types_query);
+                        if ($leave_types_result->num_rows > 0) {
+                            while ($row = $leave_types_result->fetch_assoc()) {
+                                echo '<option value="' . htmlspecialchars($row['leave_code']) . '">' . htmlspecialchars($row['leave_type']) . '</option>';
+                            }
+                        }
+                        ?>
+                    </select>
 
-</center>
-    <?php else: ?>
-        <p>Employee information not found.</p>
-    <?php endif; ?>
+                    <label for="balance">Balance</label>
+                    <input type="number" name="balance" id="balance" min="1" required>
+
+                    <input type="hidden" name="employee_id" value="<?= htmlspecialchars($employee_info['employee_no']) ?>">
+
+                    <button type="submit">Add Balance</button>
+                    <button type="button" id="cancel-btn">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <h3>Leave Balances</h3>
+        <?php if (!in_array($employee_info['status'], ['Part-time', 'Contractual'])): ?>
+            <button id="add-leave-balance-btn">Add Leave Balance</button>
+        <?php endif; ?>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Leave Type</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($leave_balances)): ?>
+                    <?php foreach ($leave_balances as $balance): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($balance['leave_type']) ?></td>
+                            <td><?= htmlspecialchars($balance['balance']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="2">No leave balances found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+    </center>
+
+<?php else: ?>
+    <p>Employee information not found.</p>
+<?php endif; ?>
 </main>
+
 <footer>
     <p>2024 Leave Management</p>
 </footer>

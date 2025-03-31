@@ -9,15 +9,17 @@ if (!isset($_SESSION['username'])) {
 
 $username = $_SESSION['username'];
 
-// Fetch employee info along with department name from the database
-$query = "
-    SELECT e.employee_id, e.employee_name, d.department_name, e.position 
-    FROM employee_info e
-    JOIN departments d ON e.department_id = d.department_id
-";
-$result = $conn->query($query);
+// Fetch employee data from API
+$employee_data = [];
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
 
-$conn->close();
+$response = file_get_contents($api_url);
+if ($response !== false) {
+    $decoded = json_decode($response, true);
+    if (isset($decoded['data'])) {
+        $employee_data = $decoded['data'];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -147,54 +149,49 @@ $conn->close();
     </button>
 </div>
 <!-- END OF TOP NAV BAR -->
-    <main>
-        <center><!-- Search Bar Positioned on the Left -->
-            <div class="search-container">
-                <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for employee info..">
-            </div>
+    
+<main>
+    <center>
+        <div class="search-container">
+            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search for employee info..">
+        </div>
 
-            <!-- Button to View Leave Balances 
-            <div class="view-leave-balances">
-                <a href="view-leave-balances.php" class="button">View Leave Balances</a>
-            </div>-->
-
-            <!-- Employee Table -->
-            <table class="employee-table" id="employeeTable">
-                <thead>
-                    <tr>
-                        <th>Employee ID</th>
-                        <th>Employee Name</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th>Leave Records</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['employee_id']); ?></td>
-                                <td><?php echo htmlspecialchars($row['employee_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['department_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['position']); ?></td>
-                                <td><a href="manage-leave.php?employee_id=<?php echo $row['employee_id']; ?>" title="View Leave Records">
-                                        <i class="fas fa-eye"></i>
-                                    </a></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
+        <table class="employee-table" id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Leave Records</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($employee_data)): ?>
+                    <?php foreach ($employee_data as $employee): ?>
                         <tr>
-                            <td colspan="5">No employee records found.</td>
+                            <td><?= htmlspecialchars($employee['employee_no']) ?></td>
+                            <td><?= htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname']) ?></td>
+                            <td><?= htmlspecialchars($employee['position']) ?></td>
+                            <td><?= htmlspecialchars($employee['position']) ?></td>
+                            <td>
+                                <a href="manage-leave.php?employee_id=<?= htmlspecialchars($employee['employee_no']) ?>" title="View Leave Records">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </center>  
-    </main>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="5">No employee records found.</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </center>
+</main>
 
-    <footer>
-        <p>2024 Leave Management</p>
-    </footer>
+<footer>
+    <p>2024 Leave Management</p>
+</footer>
 
     <!-- Custom Confirmation Dialog -->
     <div id="dialog-overlay" class="dialog-overlay">
