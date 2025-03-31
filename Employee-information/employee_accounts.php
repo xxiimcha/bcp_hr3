@@ -1,7 +1,5 @@
 <?php
-
 include '../config.php';
-
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -11,63 +9,53 @@ if (!isset($_SESSION['username'])) {
 
 $username = $_SESSION['username'];
 
-// Check if the form is submitted to reset the password
-if (isset($_POST['reset_password'])) {
-    $employee_id = $_POST['employee_id'];
-    $new_password = $_POST['new_password'];
+// Load employee data from API
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$employee_data = [];
 
-    // Hash the new password
+$response = file_get_contents($api_url);
+if ($response !== false) {
+    $decoded = json_decode($response, true);
+    if (isset($decoded['data'])) {
+        $employee_data = $decoded['data'];
+    }
+}
+
+// Fetch all login records
+$login_sql = "SELECT * FROM employee_logins";
+$login_result = $conn->query($login_sql);
+$login_data = [];
+if ($login_result->num_rows > 0) {
+    while ($row = $login_result->fetch_assoc()) {
+        $login_data[$row['employee_id']] = $row; // employee_id here refers to employee_no
+    }
+}
+
+// Handle password reset
+if (isset($_POST['reset_password'])) {
+    $employee_no = $_POST['employee_id'];
+    $new_password = $_POST['new_password'];
     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
-    // Update the employee's password in the database
-    $sql = "UPDATE employee_logins SET password = ? WHERE employee_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $hashed_password, $employee_id);
-
-    if ($stmt->execute()) {
-        echo "<p>Password successfully reset for employee ID: " . $employee_id . "</p>";
+    $update_sql = "UPDATE employee_logins SET password = '$hashed_password' WHERE employee_id = '$employee_no'";
+    if (mysqli_query($conn, $update_sql)) {
+        echo "<p>Password successfully reset for employee ID: " . htmlspecialchars($employee_no) . "</p>";
     } else {
-        echo "<p>Error resetting password: " . $conn->error . "</p>";
+        echo "<p>Error resetting password: " . mysqli_error($conn) . "</p>";
     }
-
-    $stmt->close();
 }
 
-// Check if the form is submitted to delete an employee
+// Handle deletion
 if (isset($_POST['delete_employee'])) {
-    $employee_id_to_delete = $_POST['employee_id'];
-
-    // Begin a transaction
-    $conn->begin_transaction();
-
-    try {
-        // Delete the employee's login record first
-        $sql_login = "DELETE FROM employee_logins WHERE employee_id = ?";
-        $stmt_login = $conn->prepare($sql_login);
-        $stmt_login->bind_param("i", $employee_id_to_delete);
-        $stmt_login->execute();
-        $stmt_login->close();
-
-
-        // Commit the transaction
-        $conn->commit();
-        echo "<p>Employee account successfully deleted for ID: " . $employee_id_to_delete . "</p>";
-    } catch (Exception $e) {
-        // Rollback the transaction in case of error
-        $conn->rollback();
-        echo "<p>Error deleting employee account: " . $e->getMessage() . "</p>";
+    $employee_no = $_POST['employee_id'];
+    $delete_sql = "DELETE FROM employee_logins WHERE employee_id = '$employee_no'";
+    if (mysqli_query($conn, $delete_sql)) {
+        echo "<p>Employee account successfully deleted for ID: " . htmlspecialchars($employee_no) . "</p>";
+    } else {
+        echo "<p>Error deleting employee: " . mysqli_error($conn) . "</p>";
     }
 }
-
-// SQL query to fetch employee account details with a join
-$sql = "SELECT ei.employee_id, ei.employee_name, d.department_name, ei.position, ei.email_address, el.password
-        FROM employee_info ei
-        JOIN employee_logins el ON ei.employee_id = el.employee_id
-        JOIN departments d ON ei.department_id = d.department_id";
-
-$result = $conn->query($sql);
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -220,48 +208,42 @@ $result = $conn->query($sql);
 
 
 
-<h1>Employee Accounts</h1>
-
-<!-- Add Employee Button -->
+    <h1>Employee Accounts</h1>
 <a href="add_employee.php" class="add-employee-btn">Add Employee Account</a>
 
 <table>
     <thead>
         <tr>
             <th>Employee Name</th>
-            <th>Department</th>
             <th>Position</th>
-            <th>Email Address</th>
+            <th>Email</th>
+            <th>Status</th>
             <th>Password (Hashed)</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         <?php
-        // Check if there are results
-        if ($result->num_rows > 0) {
-            // Output data of each row
-            while ($row = $result->fetch_assoc()) {
+        foreach ($employee_data as $emp) {
+            $emp_no = $emp['employee_no'];
+            if (isset($login_data[$emp_no])) {
+                $login = $login_data[$emp_no];
                 echo "<tr>";
-                echo "<td>" . $row["employee_name"] . "</td>";
-                echo "<td>" . $row["department_name"] . "</td>";
-                echo "<td>" . $row["position"] . "</td>";
-                echo "<td>" . $row["email_address"] . "</td>";
-                echo "<td>" . $row["password"] . "</td>";
-                // Add an "Update Password" button for each employee
+                echo "<td>" . htmlspecialchars($emp['firstname'] . ' ' . $emp['lastname']) . "</td>";
+                echo "<td>" . htmlspecialchars($emp['position']) . "</td>";
+                echo "<td>" . htmlspecialchars($emp['email']) . "</td>";
+                echo "<td>" . htmlspecialchars($emp['status']) . "</td>";
+                echo "<td>" . htmlspecialchars($login['password']) . "</td>";
                 echo "<td>
-                    <button class='update-password-btn' onclick='showOverlay(" . $row['employee_id'] . ")'>Update</button>
-                    <button class='delete-employee-btn' onclick='showDeleteOverlay(" . $row['employee_id'] . ", \"" . $row['employee_name'] . "\")'>Delete</button>
-                    </td>";
+                        <button class='update-password-btn' onclick='showOverlay(\"$emp_no\")'>Update</button>
+                        <button class='delete-employee-btn' onclick='showDeleteOverlay(\"$emp_no\", \"" . htmlspecialchars($emp['firstname'] . ' ' . $emp['lastname']) . "\")'>Delete</button>
+                      </td>";
                 echo "</tr>";
             }
-        } else {
-            echo "<tr><td colspan='6'>No employee accounts found</td></tr>";
         }
         ?>
     </tbody>
 </table>
-
 <!-- Password Update Overlay -->
 <div id="pass-overlay" class="pass-overlay" onclick="hideOverlay()">
     <div class="pass-overlay-content" onclick="event.stopPropagation();">

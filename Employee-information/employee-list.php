@@ -15,96 +15,27 @@ $username = $_SESSION['username'];
 // Populate the dropdown with employee names and IDs
 
 // Fetch employee data along with department names
-$sql = "SELECT employee_info.*, 
-               departments.department_name, 
-               employee_fingerprints.fingerprint_id 
-        FROM employee_info 
-        JOIN departments ON employee_info.department_id = departments.department_id
-        LEFT JOIN employee_fingerprints ON employee_info.employee_id = employee_fingerprints.employee_id";
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$employee_data = [];
 
-$result = $conn->query($sql);
-
-// Fetch departments from the database
-$departments = [];
-$department_sql = "SELECT department_name FROM departments"; // Adjust this query based on your actual table structure
-$department_result = $conn->query($department_sql);
-
-if ($department_result->num_rows > 0) {
-    while ($row = $department_result->fetch_assoc()) {
-        $departments[] = $row['department_name'];
+$response = file_get_contents($api_url);
+if ($response !== false) {
+    $json_data = json_decode($response, true);
+    if (isset($json_data['data'])) {
+        $employee_data = $json_data['data'];
     }
 }
 
+$fingerprint_query = "SELECT employee_id FROM employee_fingerprints";
+$fingerprint_result = $conn->query($fingerprint_query);
 
-// Handle edit request
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['employee_id'])) {
-    $employee_id = intval($_POST['employee_id']); // Ensure this is an integer
-    $employee_name = $_POST['employee_name'];
-    $department = $_POST['department'];
-    $position = $_POST['position'];
-    $date_of_birth = $_POST['date_of_birth'];
-    $contact_no = $_POST['contact_no'];
-    $email_address = $_POST['email_address'];
-    $address = $_POST['address'];
-    $date_hired = $_POST['date_hired'];
-    $status = $_POST['status'];
- 
-    // Update employee_info table
-    $update_sql = "UPDATE employee_info 
-    SET employee_name = ?, 
-        department_id = (SELECT department_id FROM departments WHERE department_name = ?), 
-        position = ?, 
-        date_of_birth = ?, 
-        contact_no = ?, 
-        email_address = ?, 
-        address = ?, 
-        date_hired = ?, 
-        status = ? 
-    WHERE employee_id = ?";
-$stmt = $conn->prepare($update_sql);
-
-// Corrected type definition to "sssssssssi" (9 s + 1 i)
-$stmt->bind_param("sssssssssi", $employee_name, $department, $position, $date_of_birth, $contact_no, $email_address, $address, $date_hired, $status, $employee_id);
-
-
-    if ($stmt->execute()) {
-        $_SESSION['success_message'] = "Employee updated successfully!";
-    } else {
-        $_SESSION['success_message'] = "Error: " . $stmt->error;
+$fingerprint_ids = [];
+if ($fingerprint_result && $fingerprint_result->num_rows > 0) {
+    while ($row = $fingerprint_result->fetch_assoc()) {
+        $fingerprint_ids[] = $row['employee_id'];
     }
-
-    $stmt->close();
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit(); // Ensure no further code is executed after the redirect
 }
 
-
-// Handle delete request
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_id'])) {
-    $employee_id = intval($_POST['delete_id']); // Ensure this is an integer
-
-    // Delete from employee_info table
-    $delete_sql = "DELETE FROM employee_info WHERE employee_id = ?";
-    $stmt = $conn->prepare($delete_sql);
-    $stmt->bind_param("i", $employee_id);
-
-    if ($stmt->execute()) {
-        $_SESSION['success_message'] = "Employee deleted successfully!";
-    } else {
-        $_SESSION['success_message'] = "Error: " . $stmt->error;
-    }
-
-    $stmt->close();
-    
-    // Redirect to the same page to refresh
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit(); // Ensure no further code is executed after the redirect
-}
-
-$employee_sql = "SELECT employee_id, employee_name FROM employee_info";
-$employee_result = $conn->query($employee_sql);
-
-$conn->close();
 ?>
 <?php include('../partials/navbar.php'); ?>
 <style>
@@ -202,59 +133,43 @@ $conn->close();
         </thead>
         <tbody>
         <?php
-// Check if there are results and display them
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        echo "<tr>
-                <td>" . htmlspecialchars($row['employee_id']) . "</td>
-                <td>" . htmlspecialchars($row['employee_name']) . "</td>
-                <td>" . htmlspecialchars($row['department_name']) . "</td> <!-- Displaying department_name instead of department -->
-                <td>" . htmlspecialchars($row['position']) . "</td>
-                <td>" . htmlspecialchars($row['date_of_birth']) . "</td>
-                <td>" . htmlspecialchars($row['contact_no']) . "</td>
-                <td>" . htmlspecialchars($row['email_address']) . "</td>
-                <td>" . htmlspecialchars($row['address']) . "</td>
-                <td>" . htmlspecialchars($row['date_hired']) . "</td>
-                <td>" . htmlspecialchars($row['status']) . "</td>
-                <td>"; // Open Actions column
+        if (!empty($employee_data)) {
+            foreach ($employee_data as $row) {
+                $emp_id = htmlspecialchars($row['employee_no']);
+                $full_name = htmlspecialchars($row['firstname'] . ' ' . $row['lastname']);
+        
+                echo "<tr>
+                        <td>$emp_id</td>
+                        <td>$full_name</td>
+                        <td>" . htmlspecialchars($row['position']) . "</td>
+                        <td>" . htmlspecialchars($row['position']) . "</td>
+                        <td>" . htmlspecialchars(date('Y-m-d', strtotime($row['birthdate']))) . "</td>
+                        <td>" . htmlspecialchars($row['number']) . "</td>
+                        <td>" . htmlspecialchars($row['email']) . "</td>
+                        <td>" . htmlspecialchars($row['address']) . "</td>
+                        <td>" . htmlspecialchars($row['created_at']) . "</td>
+                        <td>" . htmlspecialchars($row['status']) . "</td>
+                        <td>";
+        
+                // Check if employee_no exists in the fingerprints table
+                if (in_array($row['employee_no'], $fingerprint_ids)) {
+                    echo "<span style='color: green; font-weight: bold;'>✔ Enrolled</span>";
+                } else {
+                    echo "<button class='action-icon fingerprint-icon' onclick='openFingerprintModal(\"" . $emp_id . "\")'>
+                            <i class='fas fa-fingerprint'></i> Enroll
+                          </button>";
+                }
+                echo "<button class='action-icon view-icon' onclick='openViewModal(" . json_encode($row) . ")'>
+                    <i class='fas fa-eye'></i> View
+                </button>";
 
-        // Edit Button
-        echo "<button class='action-icon edit-icon' onclick='openEditOverlay(
-                " . htmlspecialchars($row['employee_id']) . ", 
-                \"" . htmlspecialchars($row['employee_name']) . "\", 
-                \"" . htmlspecialchars($row['department_name']) . "\", 
-                \"" . htmlspecialchars($row['position']) . "\", 
-                \"" . htmlspecialchars($row['date_of_birth']) . "\", 
-                \"" . htmlspecialchars($row['contact_no']) . "\", 
-                \"" . htmlspecialchars($row['email_address']) . "\", 
-                \"" . htmlspecialchars($row['address']) . "\", 
-                \"" . htmlspecialchars($row['date_hired']) . "\", 
-                \"" . htmlspecialchars($row['status']) . "\")'>
-                <i class='fas fa-edit'></i>
-              </button>";
-
-        // Delete Button
-        echo "<button class='action-icon delete-icon' onclick='openDeleteConfirmation(
-                " . htmlspecialchars($row['employee_id']) . ", 
-                \"" . htmlspecialchars($row['employee_name']) . "\")'>
-                <i class='fas fa-trash'></i>
-              </button>";
-
-        // Check if fingerprint is already enrolled
-        if (empty($row['fingerprint_id'])) {
-            echo "<button class='action-icon fingerprint-icon' onclick='openFingerprintModal(" . htmlspecialchars($row['employee_id']) . ")'>
-                    <i class='fas fa-fingerprint'></i> Enroll
-                  </button>";
+                echo "</td></tr>";
+            }
         } else {
-            echo "<span style='color: green; font-weight: bold;'>✔ Enrolled</span>";
+            echo "<tr><td colspan='11'>No employees found.</td></tr>";
         }
-
-        echo "</td></tr>"; // Close Actions column and row
-    }
-} else {
-    echo "<tr><td colspan='11'>No employees found.</td></tr>";
-}
-?>
+        
+        ?>
 
 </tbody>
 
@@ -295,35 +210,51 @@ if ($result->num_rows > 0) {
     </div>
 </div>
 
-<center>
-    <!-- Container for dropdown and button -->
-    <div class="dropdown-container">
-        <!-- Dropdown to select employee -->
-        <div class="employee-dropdown">
-            <select id="employee_select" onchange="updateEmployeeName()">
-                <option value="" disabled selected>Select an employee</option>
-                <?php
-                if ($employee_result->num_rows > 0) {
-                    while ($employee_row = $employee_result->fetch_assoc()) {
-                        echo "<option value='" . htmlspecialchars($employee_row['employee_id']) . "' data-name='" . htmlspecialchars($employee_row['employee_name']) . "'>" . htmlspecialchars($employee_row['employee_name']) . "</option>";
-                    }
-                }
-                ?>
-            </select>
-            <!-- Button to generate QR code -->
-            <button id="generate_qr" class="generate_qr" onclick="generateQRCode()">Generate QR Code</button>
-            <button class="print-button" onclick="printEmployeeDetails()">Save File</button>
-            
-        </div>
+<div id="viewEmployeeModal" class="modal" style="width:960px">
+  <div class="modal-content" style="max-width: 960px; padding: 0;">
+    <div style="background-color: #2e7d32; padding: 15px 25px; color: white; border-top-left-radius: 10px; border-top-right-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0;">Employee Information</h3>
+      <button style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;" onclick="closeViewModal()">×</button>
     </div>
-</center>
 
+    <div style="padding: 25px; background-color: #f9f9f9; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+            <!-- Left Column -->
+            <td style="width: 65%; vertical-align: top; padding-right: 30px; border-right: 1px solid #ccc;">
+                <table style="width: 100%; font-size: 15px;">
+                <tr><td><strong>Employee ID:</strong></td><td><span id="view-employee-id"></span></td></tr>
+                <tr><td><strong>Birthdate:</strong></td><td><span id="view-birthdate"></span></td></tr>
+                <tr><td><strong>Gender:</strong></td><td><span id="view-gender"></span></td></tr>
+                <tr><td><strong>Civil Status:</strong></td><td><span id="view-civil-status"></span></td></tr>
+                <tr><td><strong>Contact No:</strong></td><td><span id="view-contact"></span></td></tr>
+                <tr><td><strong>Email:</strong></td><td><span id="view-email"></span></td></tr>
+                <tr><td><strong>Address:</strong></td><td><span id="view-address"></span></td></tr>
+                <tr><td><strong>Date Hired:</strong></td><td><span id="view-date-hired"></span></td></tr>
+                <tr><td><strong>Status:</strong></td><td><span id="view-status"></span></td></tr>
+                <tr><td><strong>SSS:</strong></td><td><span id="view-sss"></span></td></tr>
+                <tr><td><strong>TIN:</strong></td><td><span id="view-tin"></span></td></tr>
+                <tr><td><strong>PhilHealth:</strong></td><td><span id="view-philhealth"></span></td></tr>
+                <tr><td><strong>Pag-IBIG:</strong></td><td><span id="view-pagibig"></span></td></tr>
+                </table>
+            </td>
 
-<center>
-    <!-- Container to display the QR Code -->
-    <div id="qrcode" style="display: none; margin-top: 20px; margin-bottom: 20px;"></div>
-    <img id="qr_image" style="display: none; padding: 30px 30px; margin-top: 20px;" alt="QR Code Image" />
-</center>
+            <!-- Right Column -->
+            <td style="width: 35%; text-align: center; padding-left: 30px;">
+                <img id="view-profile-img" src="" alt="Employee Photo" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid #2e7d32; margin-bottom: 15px;">
+                <h3 id="view-fullname" style="margin: 10px 0 5px 0;"></h3>
+                <p id="view-position" style="color: #666; margin-bottom: 15px;"></p>
+                <hr style="margin: 20px 0;">
+                <p><strong>Organization:</strong> Paradise Hotel</p>
+                <p><strong>Specialization:</strong> <span id="view-position-2"></span></p>
+            </td>
+            </tr>
+        </table>
+        </div>
+
+  </div>
+</div>
+
 
 <!-- Include the CryptoJS library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -331,6 +262,36 @@ if ($result->num_rows > 0) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 
 <script>
+function openViewModal(employee) {
+    const profileImage = employee.profile?.startsWith("http") ? employee.profile : `../uploads/${employee.profile}`;
+    const fullName = `${employee.firstname} ${employee.lastname}`;
+
+    document.getElementById("view-profile-img").src = profileImage;
+    document.getElementById("view-fullname").textContent = fullName;
+    document.getElementById("view-position").textContent = employee.position;
+    document.getElementById("view-position-2").textContent = employee.position;
+
+    document.getElementById("view-employee-id").textContent = employee.employee_no;
+    document.getElementById("view-birthdate").textContent = employee.birthdate;
+    document.getElementById("view-gender").textContent = employee.gender;
+    document.getElementById("view-civil-status").textContent = employee.civil_status;
+    document.getElementById("view-contact").textContent = employee.number;
+    document.getElementById("view-email").textContent = employee.email;
+    document.getElementById("view-address").textContent = employee.address;
+    document.getElementById("view-date-hired").textContent = employee.created_at;
+    document.getElementById("view-status").textContent = employee.status;
+    document.getElementById("view-sss").textContent = employee.sss || "—";
+    document.getElementById("view-tin").textContent = employee.tin || "—";
+    document.getElementById("view-philhealth").textContent = employee.philhealth || "—";
+    document.getElementById("view-pagibig").textContent = employee.pagibig || "—";
+
+    document.getElementById("viewEmployeeModal").style.display = "block";
+}
+
+function closeViewModal() {
+    document.getElementById("viewEmployeeModal").style.display = "none";
+}
+
 
 function openFingerprintModal(employeeId) {
     console.log("Opening modal for Employee ID:", employeeId); // Debugging
@@ -384,190 +345,7 @@ function startFingerprintScan() {
     });
 }
 
-
-// Function to update employee name when dropdown changes
-function updateEmployeeName() {
-    var selectedOption = document.getElementById("employee_select").selectedOptions[0];
-    var employeeName = selectedOption ? selectedOption.dataset.name : '';
-    return employeeName;
-}
-
-// QR Code Generation Function
-function generateQRCode() {
-    var employeeId = document.getElementById("employee_select").value; // Get selected employee ID
-    $("#qr_image").empty(); // Clear previous QR code
-
-    if (employeeId) {
-        // Encrypt only the employee ID
-        var encryptedId = CryptoJS.AES.encrypt(employeeId, '4S2aR9xB8pLmEoD1K3PqV7wXcAeJiG6').toString();
-
-        // Generate QR Code and get its data URL
-        $("#qr_image").qrcode({
-            text: encryptedId, // Use only the encrypted employee ID
-            width: 250, // Size of the QR code
-            height: 250,
-            render: 'canvas', // Render as canvas
-            background: "#ffffff",
-            foreground: "#000000"
-        });
-
-        // Wait for the QR code to be generated
-        setTimeout(function() {
-            var canvas = $("#qr_image canvas")[0]; // Get the canvas element
-            if (canvas) {
-                var dataURL = canvas.toDataURL("image/png"); // Convert canvas to image data URL
-                $("#qr_image").attr("src", dataURL).show(); // Set the image src and display it
-            }
-        }, 500); // Adjust timeout as needed to ensure QR code is generated
-    }
-}
-
-// Print function for employee details
-function printEmployeeDetails() {
-    var employeeId = document.getElementById("employee_select").value; // Get selected employee ID
-    var selectedOption = document.getElementById("employee_select").selectedOptions[0];
-    var employeeName = selectedOption ? selectedOption.dataset.name : '';
-
-    var qrImageSrc = $("#qr_image").attr("src"); // Get QR code image source
-
-    // Create a new window for printing
-    var printWindow = window.open('', '_blank');
-    printWindow.document.write(`
- <html>
-    <head>
-        <title>Paradise Hotel</title>
-        <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                margin: 0;
-                padding: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background-color: #f0f0f0;
-            }
-            .container { 
-                width: 300px; /* ID card width */
-                height: 450px; /* ID card height */
-                border: 2px solid black; /* Border for the card */
-                border-radius: 15px; /* Rounded corners */
-                padding: 10px;
-                background: white;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                text-align: center;
-            }
-            h1 {
-                font-size: 18px; /* Smaller title size */
-                margin-bottom: 10px;
-            }
-            .details {
-                margin-bottom: 15px;
-                font-size: 14px; /* Adjust font size for details */
-            }
-            img {
-                max-width: 250px; /* Smaller image size */
-                margin: auto;
-            }
-        </style>
-    </head>
-    <body>
-        <center>
-            <div class="container">
-                <h1>Paradise Hotel</h1>
-                <div class="details">
-                    <strong>QR Code:</strong><br><br>
-                    <img src="${qrImageSrc}" alt="QR Code">
-                </div>
-                <div class="details">
-                    <p><strong>Employee ID:</strong> ${employeeId}</p>
-                    <p><strong>Employee Name:</strong> ${employeeName}</p>
-                </div>
-            </div>
-        </center>
-    </body>
-</html>
-
-    `);
-    printWindow.document.close(); // Close the document for writing
-    printWindow.print(); // Trigger the print dialog
-    printWindow.close(); // Close the print window after printing
-}
 </script>
-
-
-<script>
-    
-</script>
-
-<!-- Edit Employee Overlay -->
-<div id="edit-overlay" class="dialog-overlay">
-    <div class="edialog-content">
-        <h3>Edit Employee</h3>
-        <form id="edit-form" method="POST" action="">
-            <input type="hidden" name="employee_id" id="employee_id" value="">
-            
-            <div class="form-group">
-                <label for="employee_name">Employee Name:</label>
-                <input type="text" name="employee_name" id="employee_name" required class="form-input">
-            </div>
-            
-            <div class="form-group">
-                <label for="department">Department:</label>
-                <select name="department" id="department" required class="form-input">
-                    <option value="" disabled>Select Department</option>
-                    <?php foreach ($departments as $dept): ?>
-                        <option value="<?php echo htmlspecialchars($dept); ?>"><?php echo htmlspecialchars($dept); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="position">Position:</label>
-                <input type="text" name="position" id="position" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="date_of_birth">Date of Birth:</label>
-                <input type="date" name="date_of_birth" id="date_of_birth" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="contact_no">Contact No:</label>
-                <input type="text" name="contact_no" id="contact_no" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="email_address">Email Address:</label>
-                <input type="email" name="email_address" id="email_address" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="address">Address:</label>
-                <input type="text" name="address" id="address" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="date_hired">Date Hired:</label>
-                <input type="date" name="date_hired" id="date_hired" required class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="status">Status:</label>
-                <input type="text" name="status" id="status" required class="form-input">
-            </div>
-
-            <div class="button-container">
-                <button type="submit" class="submit-btn">Save Changes</button>
-                <button type="button" class="cancel" onclick="closeEditOverlay()">Cancel</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 
 <footer>
     <p>2024 Employee Information</p>
@@ -576,31 +354,14 @@ function printEmployeeDetails() {
 
 <!-- Custom Confirmation Dialog -->
 <div id="dialog-overlay" class="sdialog-overlay">
-        <div class="sdialog-content">
-            <h3>Are you sure you want to sign out?</h3>
-            <div class="dialog-buttons">
-                <button id="confirm-button">Sign Out</button>
-                <button class="cancel" id="cancel-button">Cancel</button>
-            </div>
+    <div class="sdialog-content">
+        <h3>Are you sure you want to sign out?</h3>
+        <div class="dialog-buttons">
+            <button id="confirm-button">Sign Out</button>
+            <button class="cancel" id="cancel-button">Cancel</button>
         </div>
-    </div>   
-<!-- Delete Confirmation Dialog -->
-<div id="delete-confirmation-dialog" class="dialog-overlay1">
-    <div class="dialog-content1">
-        <h3>Are you sure you want to permanently delete<br> <span id="employee-name-to-delete"></span> information?</h3>
-        <form id="delete-form" method="POST" action="">
-            <input type="hidden" name="delete_id" id="delete-id" value="">
-            <div class="button-container">
-    <button type="submit" class="submit-btn">Yes</button>
-    <button type="button" class="cancel" onclick="closeDeleteConfirmation()">No</button>
-</div>
-
-        </form>
     </div>
-</div>
-
-
-
+</div>   
 
 
 <script src="../js/sign_out.js"></script>

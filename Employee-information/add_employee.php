@@ -7,69 +7,54 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Handle form submission for loading employee details
-if (isset($_POST['select_employee'])) {
-    $employee_id = $_POST['employee_id'];
+// Load employee data from API
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$employee_data = [];
 
-    // Fetch employee details based on the selected employee ID
-    $sql = "SELECT ei.employee_id, ei.employee_name, d.department_name, ei.position, ei.email_address, el.password
-            FROM employee_info ei
-            LEFT JOIN employee_logins el ON ei.employee_id = el.employee_id
-            JOIN departments d ON ei.department_id = d.department_id
-            WHERE ei.employee_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $employee_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $employee = $result->fetch_assoc();
+$response = file_get_contents($api_url);
+if ($response !== false) {
+    $decoded = json_decode($response, true);
+    if (isset($decoded['data'])) {
+        $employee_data = $decoded['data'];
+    }
 }
 
-// SQL query to fetch all employees for the dropdown
-$sql_employees = "SELECT employee_id, employee_name FROM employee_info";
-$result_employees = $conn->query($sql_employees);
+$employee = null;
+$message = "";
 
-// Handle form submission for adding a new employee account
-if (isset($_POST['add_employee'])) {
-    $employee_id = $_POST['employee_id'];
-    $new_password = $_POST['new_password'];
-    $error_message = ""; // Initialize error message
-
-    // Validate password requirements
-    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&*!])[A-Za-z\d@#$%^&*!]{8,}$/', $new_password)) {
-        $error_message = "Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be a minimum of 8 characters long.";
-    }
-
-    // Insert new employee login if no error
-    if (empty($error_message)) {
-        $sql_check = "SELECT * FROM employee_logins WHERE employee_id = ?";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param("i", $employee_id);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-
-        if ($result_check->num_rows === 0) {
-            // Hash the new password
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-
-            // Insert new login into employee_logins
-            $sql_insert = "INSERT INTO employee_logins (employee_id, password) VALUES (?, ?)";
-            $stmt_insert = $conn->prepare($sql_insert);
-            $stmt_insert->bind_param("is", $employee_id, $hashed_password);
-
-            if ($stmt_insert->execute()) {
-                $message = "New account successfully created for employee ID: " . $employee_id; // Set success message
-            } else {
-                $message = "Error creating new account: " . $conn->error; // Set error message
-            }
-
-            $stmt_insert->close();
-        } else {
-            $message = "Account already exists for employee ID: " . $employee_id; // Set account exists message
+// Handle auto-load of employee based on selection
+if (isset($_POST['employee_no'])) {
+    $employee_no = $_POST['employee_no'];
+    foreach ($employee_data as $emp) {
+        if ($emp['employee_no'] === $employee_no) {
+            $employee = $emp;
+            break;
         }
+    }
+}
 
-        $stmt_check->close();
+// Handle account creation
+if (isset($_POST['add_employee'])) {
+    $employee_no = $_POST['employee_no'];
+    $new_password = $_POST['new_password'];
+
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&*!])[A-Za-z\d@#$%^&*!]{8,}$/', $new_password)) {
+        $message = "Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be a minimum of 8 characters long.";
     } else {
-        $message = $error_message; // Set validation error message
+        $check_sql = "SELECT * FROM employee_logins WHERE employee_id = '$employee_no'";
+        $check_result = mysqli_query($conn, $check_sql);
+
+        if (mysqli_num_rows($check_result) === 0) {
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $insert_sql = "INSERT INTO employee_logins (employee_id, password) VALUES ('$employee_no', '$hashed_password')";
+            if (mysqli_query($conn, $insert_sql)) {
+                $message = "New account successfully created for employee ID: $employee_no";
+            } else {
+                $message = "Error creating account: " . mysqli_error($conn);
+            }
+        } else {
+            $message = "Account already exists for employee ID: $employee_no";
+        }
     }
 }
 ?>
@@ -78,145 +63,137 @@ if (isset($_POST['add_employee'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account</title>
+    <title>Create Employee Account</title>
     <link rel="stylesheet" href="../css/add_account.css">
     <style>
-        /* Error styling */
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .alert {
-    background-color: #e7efec; /* Light red background */
-    color: #555;            /* Dark red text */
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
+        .alert { background-color: #e7efec; color: #555; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .error-message { color: red; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1>Create Employee Account</h1>
 
-    <!-- Employee Selection Form -->
-    <form method="POST">
-        <label for="employee_id">Select Employee:</label>
-        <select name="employee_id" required>
+    <!-- Employee Selection Form (Auto-submits) -->
+    <form method="POST" id="employeeForm">
+        <label for="employee_no">Select Employee:</label>
+        <select name="employee_no" required>
             <option value="">Select Employee</option>
             <?php
-            if ($result_employees->num_rows > 0) {
-                while ($row = $result_employees->fetch_assoc()) {
-                    echo "<option value='" . $row["employee_id"] . "'>" . $row["employee_name"] . "</option>";
-                }
+            // Step 1: Get all employee_no values from employee_logins
+            $existing_accounts = [];
+            $result_existing = mysqli_query($conn, "SELECT employee_id FROM employee_logins");
+            while ($row = mysqli_fetch_assoc($result_existing)) {
+                $existing_accounts[] = $row['employee_id'];
             }
             ?>
+
+            <?php foreach ($employee_data as $emp): ?>
+                <?php if (!in_array($emp['employee_no'], $existing_accounts)): ?>
+                    <option value="<?= htmlspecialchars($emp['employee_no']) ?>"
+                        <?= (isset($employee) && $employee['employee_no'] === $emp['employee_no']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($emp['firstname'] . ' ' . $emp['lastname']) ?>
+                    </option>
+                <?php endif; ?>
+            <?php endforeach; ?>
+
         </select>
-        <button type="submit" name="select_employee">Load Employee</button>
     </form>
 
+    <script>
+        document.querySelector("select[name='employee_no']").addEventListener("change", function () {
+            document.getElementById("employeeForm").submit();
+        });
+    </script>
+
     <?php if (!empty($message)): ?>
-            <div class="alert">
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
+        <div class="alert"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
 
-    <!-- Button to trigger overlay form -->
-    <?php if (isset($employee)): ?>
-
+    <!-- Show Selected Employee Info -->
+    <?php if ($employee): ?>
         <h2>Employee Details</h2>
         <form method="POST">
-            <input type="hidden" name="employee_id" value="<?php echo $employee['employee_id']; ?>">
-            
-            <label for="employee_name">Employee Name:</label>
-            <input type="text" name="employee_name" value="<?php echo $employee['employee_name']; ?>" readonly>
-            
-            <label for="department_name">Department:</label>
-            <input type="text" name="department_name" value="<?php echo $employee['department_name']; ?>" readonly>
+            <input type="hidden" name="employee_no" value="<?= htmlspecialchars($employee['employee_no']) ?>">
 
-            <label for="position">Position:</label>
-            <input type="text" name="position" value="<?php echo $employee['position']; ?>" readonly>
+            <label>Employee Name:</label>
+            <input type="text" value="<?= htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname']) ?>" readonly>
 
-            <label for="email_address">Email Address:</label>
-            <input type="email" name="email_address" value="<?php echo $employee['email_address']; ?>" readonly>
+            <label>Position:</label>
+            <input type="text" value="<?= htmlspecialchars($employee['position']) ?>" readonly>
 
+            <label>Email Address:</label>
+            <input type="email" value="<?= htmlspecialchars($employee['email']) ?>" readonly>
 
+            <label>Contact No:</label>
+            <input type="text" value="<?= htmlspecialchars($employee['number']) ?>" readonly>
+
+            <label>Status:</label>
+            <input type="text" value="<?= htmlspecialchars($employee['status']) ?>" readonly>
         </form>
-        <button id="addEmployeeBtn">Create Password</button>
 
+        <button id="addEmployeeBtn">Create Password</button>
     <?php endif; ?>
 
     <a href="employee_accounts.php" class="back-link">Back to Employee Accounts</a>
 </div>
 
-<!-- Overlay for Add Employee Account Form -->
+<!-- Overlay Password Form -->
 <div id="overlay" class="overlay" style="display: none;">
     <div class="overlay-content">
         <form id="addEmployeeForm" method="POST">
             <h2>Add Employee Login</h2>
-            <input type="hidden" name="employee_id" value="<?php echo $employee['employee_id']; ?>">
-            <label for="new_password">New Password for New Account:</label>
-            <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required>
-            <p style="color: red; font-size: 14px;">* Password must contain:</p>
+            <input type="hidden" name="employee_no" value="<?= htmlspecialchars($employee['employee_no'] ?? '') ?>">
+
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" required>
+
+            <p style="color: red;">* Password must contain:</p>
             <ul>
-                <li>At least one uppercase letter</li>
-                <li>At least one lowercase letter</li>
-                <li>At least one number</li>
-                <li>At least one special character (e.g., @, #, $, etc.)</li>
+                <li>Uppercase letter</li>
+                <li>Lowercase letter</li>
+                <li>Number</li>
+                <li>Special character (@, #, $, etc.)</li>
                 <li>Minimum 8 characters</li>
             </ul>
-            <div id="password_error" class="password-instructions error-message"></div>
 
+            <div id="password_error" class="error-message"></div>
             <button type="submit" name="add_employee">Add Employee Account</button>
         </form>
     </div>
 </div>
 
 <script>
-    // Get elements
     const addEmployeeBtn = document.getElementById('addEmployeeBtn');
     const overlay = document.getElementById('overlay');
-
-    // Function to open the overlay
-    addEmployeeBtn.addEventListener('click', function() {
-        overlay.style.display = 'flex'; // Show the overlay
-    });
-
-    // Function to close the overlay when clicking outside of it
-    overlay.addEventListener('click', function(event) {
-        if (event.target === overlay) {
-            overlay.style.display = 'none'; // Hide the overlay
-        }
-    });
-
-    // Form validation for new password
     const form = document.getElementById('addEmployeeForm');
     const passwordInput = document.getElementById('new_password');
     const passwordError = document.getElementById('password_error');
 
-    form.addEventListener('submit', function(event) {
-        // Clear any previous error message
+    addEmployeeBtn?.addEventListener('click', () => {
+        overlay.style.display = 'flex';
+    });
+
+    overlay?.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+        }
+    });
+
+    form?.addEventListener('submit', function (e) {
         passwordError.textContent = '';
-
-        // Validate password
         const password = passwordInput.value;
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&*!])[A-Za-z\d@#$%^&*!]{8,}$/;
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&*!])[A-Za-z\d@#$%^&*!]{8,}$/;
 
-        if (!passwordRegex.test(password)) {
-            event.preventDefault();  // Stop form submission
-            passwordError.textContent = "Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be a minimum of 8 characters long.";
+        if (!regex.test(password)) {
+            e.preventDefault();
+            passwordError.textContent = "Password must meet the required format.";
         }
     });
 </script>
+
 <script src="../js/sign_out.js"></script>
 <script src="../jsno-previousbutton.js"></script>
 <script src="../js/toggle-darkmode.js"></script>
 </body>
 </html>
-
-
