@@ -9,22 +9,35 @@ if (!isset($_SESSION['username'])) {
 
 $username = $_SESSION['username'];
 
-// Fetch "Full-time" employee details for the dropdown
-$employeeResult = $conn->query("SELECT employee_id, employee_name FROM employee_info WHERE status = 'Full-time'");
-
-// Fetch leave types for the leave type dropdown
+// Fetch employee data from the external API
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$employee_data = [];
 $leaveTypesResult = $conn->query("SELECT leave_id, leave_type FROM leave_types");
 
-// Fetch leave requests to display in the table
-$leaveRequestsResult = $conn->query("SELECT e.employee_id, e.employee_name, d.department_name, e.position, 
-                                        lr.leave_id, lt.leave_type, lr.start_date, lr.end_date, 
+// Fetch API data
+$response = file_get_contents($api_url);
+if ($response !== false) {
+    $decoded = json_decode($response, true);
+    if (isset($decoded['data'])) {
+        $employee_data = array_filter($decoded['data'], function ($emp) {
+            return isset($emp['status']) && $emp['status'] === 'DoneTraining';
+        });
+    }
+}
+
+// Fetch leave requests (still from local database)
+$leaveRequestsResult = $conn->query("SELECT lr.employee_id, lr.leave_id, lt.leave_type, lr.start_date, lr.end_date, 
                                         lr.total_days, lr.remarks, lr.status, lr.date_submitted  
                                      FROM employee_leave_requests lr
-                                     JOIN employee_info e ON lr.employee_id = e.employee_id
-                                     JOIN departments d ON e.department_id = d.department_id
                                      JOIN leave_types lt ON lr.leave_id = lt.leave_id");
 
 $conn->close();
+
+// Map API employee info by employee_no for quick lookup
+$employee_map = [];
+foreach ($employee_data as $emp) {
+    $employee_map[$emp['employee_no']] = $emp;
+}
 ?>
 
 <!DOCTYPE html>
@@ -180,12 +193,17 @@ $conn->close();
 
             <form method="POST" action="submit-leave-request.php" id="leaveForm">
                 <div class="form-row">
-                <div class="form-group">
-    <label for="employee_id">Fetch:</label>
-    <input type="text" id="employee_id" name="employee_id" placeholder="Enter Employee ID" required>
-    <button type="button" id="fetchButton" onclick="fetchEmployeeDetails()">Fetch</button>
-</div>
-
+                    <div class="form-group">
+                        <label for="employee_id">Select Employee:</label>
+                        <select name="employee_id" id="employee_id" onchange="fetchEmployeeDetails()" required>
+                            <option value="">Select Employee</option>
+                            <?php foreach ($employee_data as $emp): ?>
+                                <option value="<?= htmlspecialchars($emp['employee_no']) ?>">
+                                    <?= htmlspecialchars($emp['employee_no'] . ' - ' . $emp['firstname'] . ' ' . $emp['lastname']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
 
                     <div class="form-group">
@@ -289,44 +307,49 @@ $conn->close();
 
             </tr>
         </thead>
-       <tbody>
-    <?php
-    if ($leaveRequestsResult->num_rows > 0) {
-        while ($row = $leaveRequestsResult->fetch_assoc()) {
-            echo '<tr>';
-            echo '<td>' . htmlspecialchars($row['employee_id']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['employee_name']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['department_name']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['position']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['leave_type']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['start_date']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['end_date']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['total_days']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['date_submitted']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['remarks']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['status']) . '</td>';
-            
-            echo '<td><form method="POST" action="update-leave-status.php" class="form-update">
-                        <input type="hidden" name="employee_id" value="' . htmlspecialchars($row['employee_id']) . '">
-                        <input type="hidden" name="leave_id" value="' . htmlspecialchars($row['leave_id']) . '">
-                        <input type="hidden" name="start_date" value="' . htmlspecialchars($row['start_date']) .'">
-                        <input type="hidden" name="end_date" value="' .  htmlspecialchars($row['end_date']) . '">
 
-                        <input type="hidden" name="total_days" value="' . htmlspecialchars($row['total_days']) . '">
-                        <select name="status" required>
-                            <option value="" disabled selected>Select Status</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                        <button type="submit" class="update" >Update</button>
-                    </form></td>';
-            echo '</tr>';
+        <!-- inside <tbody> of HTML -->
+        <tbody>
+        <?php
+        if ($leaveRequestsResult->num_rows > 0) {
+            while ($row = $leaveRequestsResult->fetch_assoc()) {
+                $emp_id = $row['employee_id'];
+                $employee = isset($employee_map[$emp_id]) ? $employee_map[$emp_id] : null;
+
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($emp_id) . '</td>';
+                echo '<td>' . htmlspecialchars($employee ? $employee['firstname'] . ' ' . $employee['lastname'] : 'N/A') . '</td>';
+                echo '<td>' . htmlspecialchars($employee['department'] ?? 'N/A') . '</td>';
+                echo '<td>' . htmlspecialchars($employee['position'] ?? 'N/A') . '</td>';
+                echo '<td>' . htmlspecialchars($row['leave_type']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['start_date']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['end_date']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['total_days']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['date_submitted']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['remarks']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['status']) . '</td>';
+
+                echo '<td><form method="POST" action="update-leave-status.php" class="form-update">
+                            <input type="hidden" name="employee_id" value="' . htmlspecialchars($emp_id) . '">
+                            <input type="hidden" name="leave_id" value="' . htmlspecialchars($row['leave_id']) . '">
+                            <input type="hidden" name="start_date" value="' . htmlspecialchars($row['start_date']) .'">
+                            <input type="hidden" name="end_date" value="' . htmlspecialchars($row['end_date']) . '">
+                            <input type="hidden" name="total_days" value="' . htmlspecialchars($row['total_days']) . '">
+                            <select name="status" required>
+                                <option value="" disabled selected>Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                            <button type="submit" class="update" >Update</button>
+                        </form></td>';
+                echo '</tr>';
+            }
+        } else {
+            echo '<tr><td colspan="12">No leave requests found.</td></tr>';
         }
-    } else {
-        echo '<tr><td colspan="12">No leave requests found.</td></tr>';
-    }
-    ?>
-</tbody>
+        ?>
+        </tbody>
+
     </table>
 </div>
 
@@ -361,61 +384,47 @@ $conn->close();
 <script src="../js/toggle-darkmode.js"></script>
 
 
-<script>function fetchEmployeeDetails() {
-    const employeeId = document.getElementById('employee_id').value.trim(); // Trim input to avoid extra spaces
+<script>
+    async function fetchEmployeeDetails() {
+        const selectedId = document.getElementById('employee_id').value;
 
-    // Clear fields if input is empty
-    if (!employeeId) {
-        clearEmployeeDetails();
-        alert('Please enter an Employee ID.');
-        return;
+        if (!selectedId) {
+            clearEmployeeDetails();
+            return;
+        }
+
+        try {
+            const res = await fetch('https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs');
+            const data = await res.json();
+
+            if (data && Array.isArray(data.data)) {
+                const employee = data.data.find(emp => emp.employee_no === selectedId);
+
+                if (employee) {
+                    document.getElementById('employee_name').value = `${employee.firstname} ${employee.lastname}`;
+                    document.getElementById('department').value = employee.department || '';
+                    document.getElementById('position').value = employee.position || '';
+                } else {
+                    clearEmployeeDetails();
+                    alert("Employee not found.");
+                }
+            } else {
+                alert("Invalid API response.");
+            }
+        } catch (error) {
+            console.error("API fetch error:", error);
+            clearEmployeeDetails();
+            alert("Failed to fetch employee details.");
+        }
     }
 
-    // Use AJAX to fetch employee details
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'fetch_employee_details.php?employee_id=' + encodeURIComponent(employeeId), true); // Encode the input for safety
-
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            try {
-                const employeeData = JSON.parse(xhr.responseText);
-
-                if (employeeData && employeeData.employee_name) {
-                    // Populate fields with fetched data
-                    document.getElementById('employee_name').value = employeeData.employee_name || '';
-                    document.getElementById('department').value = employeeData.department_name || '';
-                    document.getElementById('position').value = employeeData.position || '';
-                } else {
-                    clearEmployeeDetails(); // Clear fields if no data found
-                    alert('No employee details found for the given ID.');
-                }
-            } catch (error) {
-                clearEmployeeDetails(); // Handle invalid JSON response
-                console.error('Error parsing employee details:', error);
-                alert('Failed to fetch employee details. Please try again.');
-            }
-        } else {
-            clearEmployeeDetails();
-            alert('Error fetching details. Status: ' + xhr.status);
-        }
-    };
-
-    xhr.onerror = function () {
-        clearEmployeeDetails();
-        alert('An error occurred while fetching employee details.');
-    };
-
-    xhr.send();
-}
-
-// Function to clear the employee details fields
-function clearEmployeeDetails() {
-    document.getElementById('employee_name').value = '';
-    document.getElementById('department').value = '';
-    document.getElementById('position').value = '';
-}
-
+    function clearEmployeeDetails() {
+        document.getElementById('employee_name').value = '';
+        document.getElementById('department').value = '';
+        document.getElementById('position').value = '';
+    }
 </script>
+
 </body>
 <style>/* Style for the Fetch button */
 #fetchButton {
