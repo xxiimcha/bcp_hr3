@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1); 
+ini_set('display_startup_errors', 1); 
+error_reporting(E_ALL);
 include '../config.php';
 session_start();
 
@@ -7,76 +10,68 @@ if (!isset($_SESSION['employee_id'])) {
     exit();
 }
 
-// Fetch employee details along with their department name from the database
 $employee_id = $_SESSION['employee_id'];
 
-$sql = "SELECT e.*, d.department_name, st.shift_start, st.shift_end 
-        FROM employee_info e 
-        JOIN departments d ON e.department_id = d.department_id 
-        JOIN employee_shifts es ON e.employee_id = es.employee_id 
-        JOIN shift_types st ON es.shift_type_id = st.shift_type_id
-        WHERE e.employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employee_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// === STEP 1: Fetch Employee Info from API ===
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$api_response = file_get_contents($api_url);
+$api_data = json_decode($api_response, true);
 
-if ($result->num_rows > 0) {
-    $employee = $result->fetch_assoc();
-} else {
-    echo "No employee found.";
+$employee = null;
+foreach ($api_data['data'] as $emp) {
+    if ($emp['employee_no'] == $employee_id) {
+        $employee = $emp;
+        break;
+    }
+}
+
+if (!$employee) {
+    echo "Employee not found from API.";
     exit();
 }
-// Fetch leave balances for the logged-in employee
-$leaveBalanceSql = "SELECT lt.leave_type, elb.balance
-                    FROM employee_leave_balances elb
-                    JOIN leave_types lt ON elb.leave_code = lt.leave_code
-                    WHERE elb.employee_id = ?";
-$leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
-$leaveBalanceStmt->bind_param("i", $employee_id);
-$leaveBalanceStmt->execute();
-$leaveBalanceResult = $leaveBalanceStmt->get_result();
 
+// === STEP 2: Fetch Shift Schedule from Local DB ===
+$shiftResult = mysqli_query($conn, "SELECT st.shift_start, st.shift_end 
+    FROM emp_shifts es 
+    JOIN shift_types st ON es.shift_type_id = st.shift_type_id 
+    WHERE es.employee_id = $employee_id");
 
+if ($shiftResult && mysqli_num_rows($shiftResult) > 0) {
+    $shiftData = mysqli_fetch_assoc($shiftResult);
+    $employee['shift_start'] = $shiftData['shift_start'];
+    $employee['shift_end'] = $shiftData['shift_end'];
+} else {
+    $employee['shift_start'] = 'N/A';
+    $employee['shift_end'] = 'N/A';
+}
 
+// === STEP 3: Fetch Leave Balances ===
+$leaveBalanceResult = mysqli_query($conn, "
+    SELECT lt.leave_type, elb.balance
+    FROM employee_leave_balances elb
+    JOIN leave_types lt ON elb.leave_code = lt.leave_code
+    WHERE elb.employee_id = $employee_id
+");
 
-// Fetch attendance records for the logged-in employee
-$attendanceSql = "SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
-                  FROM attendance a 
-                  WHERE a.employee_id = ? 
-                  ORDER BY a.attendance_date DESC";
+// === STEP 4: Fetch Attendance Records (latest first) ===
+$attendanceResult = mysqli_query($conn, "
+    SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
+    FROM attendance a 
+    WHERE a.employee_id = $employee_id 
+    ORDER BY a.attendance_date DESC
+");
 
-$attendanceStmt = $conn->prepare($attendanceSql);
-$attendanceStmt->bind_param("i", $employee_id);
-$attendanceStmt->execute();
-$attendanceResult = $attendanceStmt->get_result();
-
-
-
-// Initialize date variables
+// === STEP 5: Date Range Filter (if any) ===
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
 
-// Define the base query
-$query = "SELECT * FROM attendance WHERE employee_id = ?";
-
-// Add date range filtering if both dates are specified
+$query = "SELECT * FROM attendance WHERE employee_id = $employee_id";
 if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND attendance_date BETWEEN ? AND ?";
+    $query .= " AND attendance_date BETWEEN '$from_date' AND '$to_date'";
 }
-
-// Prepare and execute the query with the date range parameters
-$stmt = $conn->prepare($query);
-if (!empty($from_date) && !empty($to_date)) {
-    $stmt->bind_param("iss", $employee_id, $from_date, $to_date);
-} else {
-    $stmt->bind_param("i", $employee_id);
-}
-$stmt->execute();
-$attendanceResult = $stmt->get_result();
-
-
+$attendanceResult = mysqli_query($conn, $query);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -109,10 +104,7 @@ $attendanceResult = $stmt->get_result();
                 <button onclick="toggleDarkMode()" class="dark-mode-toggle" >
             <i id="dark-mode-icon" class="fas"></i> <!-- Icon will change dynamically -->
         </button>
-
-        <span>Welcome, <?php echo htmlspecialchars($employee['employee_name']); ?></span>
-        
-
+        <span>Welcome, <?php echo htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname']); ?></span>
         <!-- Logout Button -->
         <button onclick="showLogoutOverlay()" class="logout">
             <i class="fas fa-sign-out-alt"></i>

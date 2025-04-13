@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1); 
+ini_set('display_startup_errors', 1); 
+error_reporting(E_ALL);
 include '../config.php';
 session_start();
 
@@ -7,75 +10,60 @@ if (!isset($_SESSION['employee_id'])) {
     exit();
 }
 
-// Fetch employee details along with their department name from the database
-$employee_id = $_SESSION['employee_id'];
-$sql = "SELECT e.*, d.department_name, st.shift_start, st.shift_end 
-        FROM employee_info e 
-        JOIN departments d ON e.department_id = d.department_id 
-        JOIN employee_shifts es ON e.employee_id = es.employee_id 
-        JOIN shift_types st ON es.shift_type_id = st.shift_type_id
-        WHERE e.employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employee_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// Fetch employee data from external API
+$employee_no = $_SESSION['employee_id'];
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$api_response = file_get_contents($api_url);
+$api_data = json_decode($api_response, true);
 
-if ($result->num_rows > 0) {
-    $employee = $result->fetch_assoc();
-} else {
-    echo "No employee found.";
-    exit();
+$employee = null;
+foreach ($api_data['data'] as $emp) {
+    if ($emp['employee_no'] === $employee_no) {
+        $employee = $emp;
+        $employee['employee_name'] = $emp['firstname'] . ' ' . $emp['lastname'];
+        break;
+    }
 }
-// Fetch leave balances for the logged-in employee
+
+if (!$employee) {
+    die("Employee not found from API.");
+}
+
+// Optional: assign a dummy shift schedule if needed
+$employee['shift_start'] = '08:00:00';
+$employee['shift_end'] = '17:00:00';
+
+// Fetch leave balances from local DB (use employee_no)
 $leaveBalanceSql = "SELECT lt.leave_type, elb.balance
                     FROM employee_leave_balances elb
-                    JOIN leave_types lt ON elb.leave_code = lt.leave_code
-                    WHERE elb.employee_id = ?";
-$leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
-$leaveBalanceStmt->bind_param("i", $employee_id);
-$leaveBalanceStmt->execute();
-$leaveBalanceResult = $leaveBalanceStmt->get_result();
+                    JOIN leave_types lt ON elb.leave_id = lt.leave_id
+                    WHERE elb.employee_id = '$employee_no'";
+$leaveBalanceResult = mysqli_query($conn, $leaveBalanceSql);
 
-
-
-
-// Fetch attendance records for the logged-in employee
+// Fetch attendance records
 $attendanceSql = "SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
                   FROM attendance a 
-                  WHERE a.employee_id = ? 
+                  WHERE a.employee_id = '$employee_no' 
                   ORDER BY a.attendance_date DESC";
+$attendanceResult = mysqli_query($conn, $attendanceSql);
 
-$attendanceStmt = $conn->prepare($attendanceSql);
-$attendanceStmt->bind_param("i", $employee_id);
-$attendanceStmt->execute();
-$attendanceResult = $attendanceStmt->get_result();
-
-
-
-// Initialize date variables
+// Filtered attendance
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
-
-// Define the base query
-$query = "SELECT * FROM attendance WHERE employee_id = ?";
-
-// Add date range filtering if both dates are specified
+// Fetch records from `employee_timesheet` using employee_no
+$query = "SELECT * FROM employee_timesheet WHERE employee_id = '$employee_no'";
 if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND attendance_date BETWEEN ? AND ?";
+    $query .= " AND DATE(time_in) BETWEEN '$from_date' AND '$to_date'";
 }
+$attendanceResult = mysqli_query($conn, $query);
 
-// Prepare and execute the query with the date range parameters
-$stmt = $conn->prepare($query);
-if (!empty($from_date) && !empty($to_date)) {
-    $stmt->bind_param("iss", $employee_id, $from_date, $to_date);
-} else {
-    $stmt->bind_param("i", $employee_id);
+// Debug fallback if query fails
+if (!$attendanceResult) {
+    die("Error fetching timesheet data: " . mysqli_error($conn));
 }
-$stmt->execute();
-$attendanceResult = $stmt->get_result();
-
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

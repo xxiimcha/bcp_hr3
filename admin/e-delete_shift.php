@@ -12,7 +12,7 @@ if (isset($_GET['shift_id'])) {
     $shiftId = $_GET['shift_id'];
     
     // Prepare and execute the delete query
-    $sql = "DELETE FROM employee_shifts WHERE employee_shift_id = ?";
+    $sql = "DELETE FROM emp_shifts WHERE employee_shift_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $shiftId);
     

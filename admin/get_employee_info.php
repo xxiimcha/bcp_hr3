@@ -15,7 +15,7 @@ if (isset($_GET['employee_id'])) {
             s.shift_end
         FROM employee_info e
         LEFT JOIN departments d ON e.department_id = d.department_id
-        LEFT JOIN employee_shifts es ON e.employee_id = es.employee_id
+        LEFT JOIN emp_shifts es ON e.employee_id = es.employee_id
         LEFT JOIN shift_types s ON es.shift_type_id = s.shift_type_id
         WHERE e.employee_id = ?
     ";

@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Check leave balance for the requested leave type
     $leaveBalanceSql = "SELECT lb.balance, lt.leave_id FROM employee_leave_balances lb 
-                        JOIN leave_types lt ON lb.leave_code = lt.leave_code 
+                        JOIN leave_types lt ON lb.leave_id = lt.leave_id 
                         WHERE lb.employee_id = ? AND lt.leave_code = ?";
     $leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
     $leaveBalanceStmt->bind_param("is", $employee_id, $leave_code);  // Binding employee_id and leave_code

@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             FROM attendance a
             JOIN employee_info ei ON a.employee_id = ei.employee_id
             JOIN departments d ON ei.department_id = d.department_id
-            LEFT JOIN employee_shifts es ON a.employee_id = es.employee_id
+            LEFT JOIN emp_shifts es ON a.employee_id = es.employee_id
             LEFT JOIN shift_types st ON es.shift_type_id = st.shift_type_id";
 
     $sql .= " WHERE 1=1";
@@ -163,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $today_date = date('Y-m-d');
     $absent_employees_sql = "
         SELECT ei.employee_id, ei.employee_name, es.shift_type_id, st.shift_start, st.shift_end
-        FROM employee_shifts es
+        FROM emp_shifts es
         JOIN employee_info ei ON es.employee_id = ei.employee_id
         LEFT JOIN attendance a ON ei.employee_id = a.employee_id AND a.attendance_date = '$today_date'
         LEFT JOIN shift_types st ON es.shift_type_id = st.shift_type_id

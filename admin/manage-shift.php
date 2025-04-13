@@ -11,14 +11,11 @@ if (!isset($_SESSION['username'])) {
 $username = $_SESSION['username'];
 
 // Fetch employee shifts
-$sql = "SELECT es.employee_shift_id, es.employee_id, ei.employee_name, st.shift_name, st.shift_start, st.shift_end, es.notes 
-        FROM employee_shifts es 
-        JOIN employee_info ei ON es.employee_id = ei.employee_id 
+$sql = "SELECT es.employee_shift_id, es.employee_id, st.shift_name, st.shift_start, st.shift_end, es.notes 
+        FROM emp_shifts es
         JOIN shift_types st ON es.shift_type_id = st.shift_type_id";
-
 $result = $conn->query($sql);
 
-// Close the database connection
 ?>
 
 <!DOCTYPE html>
@@ -33,121 +30,7 @@ $result = $conn->query($sql);
 </head>
 
 <body class="light-mode">
-<div class="top-nav">
-    <ul>
-        <a href="../maindashboard.php">
-            <h1 class="logopos">
-                
-                Paradise <br> Hotel
-            </h1>
-        </a>
-        <li class="top">
-            <a class="top1" href="">
-                <i class="fas fa-home"></i> <!-- Icon for Home -->
-                Home
-            </a>
-            <div class="top1dropdown">
-                <div class="dropdown-column">
-                    <h3>Payroll</h3> <!-- Icon for Payroll -->
-                    <a href="time-and-attendance-home.php">
-                        <i class="fas fa-clock"></i> Time and Attendance <!-- Icon for Time and Attendance -->
-                    </a>
-                    <a href="../Employee-information/employee-list.php">
-                        <i class="fas fa-users"></i> Employee Information <!-- Icon for Employee Information -->
-                    </a>
-                    <a href="payroll/log-in.php">
-                        <i class="fas fa-calculator"></i> Payroll Processing <!-- Icon for Payroll Processing -->
-                    </a>
-                </div>           
-            </div>
-        </li>
-        <li class="top">
-            <a class="top1" href="time-and-attendance-home.php">
-                <i class="fas fa-chart-line"></i> <!-- Icon for Dashboard -->
-                Dashboard
-            </a>          
-        </li>
-        <li class="top">
-            <a class="top1" href="">
-                <i class="fas fa-tasks"></i> <!-- Icon for Manage -->
-                Manage
-            </a>
-            <div class="top1dropdown">
-                <div class="dropdown-column">
-                    <h3><b>Attendance Tracking</b></h3> <!-- Icon for Attendance Tracking -->
-                    <a href="clocking-system.php">
-                        <i class="fas fa-clock"></i> Clocking System <!-- Icon for Clocking System -->
-                    </a>
-                    <a href="timesheet.php">
-                        <i class="fas fa-calendar-alt"></i> Daily Record <!-- Icon for Daily Record -->
-                    </a>
-                    <a href="attendance-summary.php">
-                        <i class="fas fa-list"></i> Attendance Summary <!-- Icon for Attendance Summary -->
-                    </a>
-                </div>
-                <div class="dropdown-column">
-                    <h3><b>Leave Management</b></h3> <!-- Icon for Leave Management -->
-                    <a href="leavemanagement.php">
-                        <i class="fas fa-envelope-open-text"></i> Leave Requests <!-- Icon for Leave Requests -->
-                    </a>
-                    <a href="leave-record.php">
-                        <i class="fas fa-file-alt"></i> Employee Leave Records <!-- Icon for Leave Records -->
-                    </a>
-                    <a href="leave-type-list.php">
-                        <i class="fas fa-list-alt"></i> List of Leave Types <!-- Icon for Leave Types -->
-                    </a>
-                </div>
-                <div class="dropdown-column">
-                    <h3><b>Shift Management</b></h3> <!-- Icon for Shift Management -->
-                    <a href="manage-shift.php">
-                        <i class="fas fa-calendar"></i> Manage Shift <!-- Icon for Manage Shift -->
-                    </a>
-                    <a href="shift-types.php">
-                        <i class="fas fa-layer-group"></i> Shift Types <!-- Icon for Shift Types -->
-                    </a>
-                </div>
-                <div class="dropdown-column">
-                    <h3><b>Compliance & Labor Law Adherence</b></h3> <!-- Icon for Compliance -->
-                    <a href="../admin/compliance/violations.php">
-                        <i class="fas fa-exclamation-triangle"></i> Violations <!-- Icon for Violations -->
-                    </a>
-                    <a href="../admin/compliance/compliance-report.php">
-                        <i class="fas fa-file-contract"></i> Compliance Report <!-- Icon for Compliance Report -->
-                    </a>
-                    <a href="../admin/compliance/labor-policies.php">
-                        <i class="fas fa-book"></i> Labor Policies <!-- Icon for Labor Policies -->
-                    </a>
-                    <a href="../admin/compliance/adherence-monitoring.php">
-                        <i class="fas fa-eye"></i> Adherence Monitoring <!-- Icon for Monitoring -->
-                    </a>
-                </div>
-            </div>
-        </li>
-        <li class="top">
-            <a class="top1" href="#settings">
-                <i class="fas fa-cog"></i> <!-- Icon for Settings -->
-                Settings
-            </a>
-
-        </li>
-    </ul>
-    <button type="button" id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle Dark Mode">
-        <i class="fas fa-moon"></i> <!-- Icon for dark mode toggle -->
-    </button>
-
-    <!-- USER -->
-    <div class="admin-section">
-        <div class="admin-name">
-            <i class="fas fa-user"></i> User - <?php echo htmlspecialchars($username); ?>
-            <div class="admin-dropdown-content">
-                <a href="../manage_account.php">Manage Account</a>
-            </div>
-        </div>
-    </div>
-    <button type="button" class="logout" id="logout-button" style="margin-right: 10px;">
-        <i class="fas fa-sign-out-alt"></i> <!-- Icon for logout -->
-    </button>
-</div>
+<?php include '../partials/nav.php'; ?>
 <!-- END OF TOP NAV BAR -->
 
 
@@ -174,18 +57,18 @@ if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
         echo "<tr>
                 <td>{$row['employee_id']}</td>
-                <td>{$row['employee_name']}</td>
+                <td class='emp-name' data-emp='{$row['employee_id']}'>Loading...</td>
                 <td>{$row['shift_name']}</td>
                 <td>{$row['shift_start']}</td>
                 <td>{$row['shift_end']}</td>
                 <td>{$row['notes']}</td>
                 <td>
                     <button class=\"action-icon delete-icon\" data-shift-id=\"{$row['employee_shift_id']}\">
-                        <i class=\"fas fa-trash\"></i> <!-- Font Awesome trash can icon -->
+                        <i class=\"fas fa-trash\"></i>
                     </button>
                 </td>
               </tr>";
-    }
+    }    
 } else {
     echo "<tr><td colspan='7'>No shifts found</td></tr>";
 }
@@ -208,6 +91,30 @@ if ($result->num_rows > 0) {
 </div>
 
 <script>
+
+window.addEventListener('DOMContentLoaded', function () {
+    fetch('https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs')
+        .then(response => response.json())
+        .then(api => {
+            const employees = api.data;
+            const nameMap = {};
+            employees.forEach(emp => {
+                nameMap[emp.employee_no] = `${emp.firstname} ${emp.lastname}`;
+            });
+
+            document.querySelectorAll('.emp-name').forEach(td => {
+                const empId = td.getAttribute('data-emp');
+                td.textContent = nameMap[empId] || 'Unknown';
+            });
+        })
+        .catch(err => {
+            console.error('Error fetching employee names:', err);
+            document.querySelectorAll('.emp-name').forEach(td => {
+                td.textContent = 'Error';
+            });
+        });
+});
+
     let deleteShiftId = null; // Variable to store the shift ID to delete
 
     // Handle the delete button click
@@ -398,8 +305,10 @@ body.dark-mode #cancel-delete-button:hover {
         <span class="close" id="closeOverlay">&times;</span>
         <h3>Add Employee Shift</h3>
         <form id="addShiftForm">
-            <label for="employee_id">Employee ID:</label>
-            <input type="number" id="employee_id" name="employee_id" required>
+            <label for="employee_id">Employee:</label>
+            <select id="employee_id" name="employee_id" required>
+                <option value="">Select Employee</option>
+            </select>
             
             <label for="shift_type_id">Shift Type:</label>
             <select id="shift_type_id" name="shift_type_id" required>
@@ -456,6 +365,26 @@ body.dark-mode #cancel-delete-button:hover {
 
 </style>
 <script>// employee-shift.js
+// Populate employee list from API
+window.addEventListener('DOMContentLoaded', function () {
+    fetch('https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('employee_id');
+            if (data && data.data) {
+                data.data.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.employee_no; // use employee_no as the value
+                    option.text = `${emp.firstname} ${emp.lastname}`;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load employee list:', error);
+            alert('Error loading employee list from API.');
+        });
+});
 
 document.getElementById('addShiftBtn').onclick = function() {
     document.getElementById('employee-shift-overlay').style.display = 'block';

@@ -47,9 +47,9 @@ if (isset($_GET['employee_id'])) {
 
     // Fetch leave balances
     $balance_query = "
-        SELECT elb.leave_code, lt.leave_type, elb.balance 
+        SELECT elb.leave_id, lt.leave_type, elb.balance 
         FROM employee_leave_balances elb
-        JOIN leave_types lt ON elb.leave_code = lt.leave_id
+        JOIN leave_types lt ON elb.leave_id = lt.leave_id
         WHERE elb.employee_id = ?";
     $balance_stmt = $conn->prepare($balance_query);
     $balance_stmt->bind_param("s", $employee_no);
@@ -173,16 +173,16 @@ if (isset($_GET['employee_id'])) {
         <div class="balance-overlay" id="balance-overlay">
             <div id="add-leave-balance-form">
                 <h4>Add Leave Balance</h4><hr>
-                <form action="add-leave-balance.php" method="POST">
-                    <label for="leave_code">Leave Type</label>
+                <form id="add-balance-form">
+                    <label for="leave_id">Leave Type</label>
                     <select name="leave_code" id="leave_code" required>
                         <option value="">Select Leave Type</option>
                         <?php
-                        $leave_types_query = "SELECT leave_code, leave_type FROM leave_types";
+                        $leave_types_query = "SELECT leave_id, leave_type FROM leave_types";
                         $leave_types_result = $conn->query($leave_types_query);
                         if ($leave_types_result->num_rows > 0) {
                             while ($row = $leave_types_result->fetch_assoc()) {
-                                echo '<option value="' . htmlspecialchars($row['leave_code']) . '">' . htmlspecialchars($row['leave_type']) . '</option>';
+                                echo '<option value="' . htmlspecialchars($row['leave_id']) . '">' . htmlspecialchars($row['leave_type']) . '</option>';
                             }
                         }
                         ?>
@@ -247,6 +247,34 @@ document.getElementById("add-leave-balance-btn").addEventListener("click", funct
 
 document.getElementById("cancel-btn").addEventListener("click", function() {
     document.getElementById("balance-overlay").style.display = "none"; // Hide overlay
+});
+
+document.getElementById("add-balance-form").addEventListener("submit", function(e) {
+    e.preventDefault(); // prevent page reload
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    // Log each individual field being submitted
+    console.log("Submitting the following data:");
+    formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+    });
+
+    fetch('add-leave-balance.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        console.log("Server response:", data);
+        alert('Leave balance successfully added or updated.');
+        window.location.reload(); // optional: reload to refresh the table
+    })
+    .catch(error => {
+        console.error('Error submitting form:', error);
+        alert('An error occurred while submitting the form.');
+    });
 });
 
 </script>

@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1); 
+ini_set('display_startup_errors', 1); 
+error_reporting(E_ALL);
 include '../config.php';
 session_start();
 
@@ -7,74 +10,48 @@ if (!isset($_SESSION['employee_id'])) {
     exit();
 }
 
-// Fetch employee details along with their department name from the database
-$employee_id = $_SESSION['employee_id'];
-$sql = "SELECT e.*, d.department_name, st.shift_start, st.shift_end 
-        FROM employee_info e 
-        JOIN departments d ON e.department_id = d.department_id 
-        JOIN employee_shifts es ON e.employee_id = es.employee_id 
-        JOIN shift_types st ON es.shift_type_id = st.shift_type_id
-        WHERE e.employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employee_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// Fetch employee data from API
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$api_response = file_get_contents($api_url);
+$api_data = json_decode($api_response, true);
 
-if ($result->num_rows > 0) {
-    $employee = $result->fetch_assoc();
-} else {
-    echo "No employee found.";
-    exit();
+// Match session employee_no with API response to get full employee info and internal ID
+$employee_no = $_SESSION['employee_id']; // EMP0001, etc.
+$employee = null;
+$employee_id = null;
+
+foreach ($api_data['data'] as $emp) {
+    if ($emp['employee_no'] === $employee_no) {
+        $employee = $emp;
+        $employee['employee_name'] = $emp['firstname'] . ' ' . $emp['lastname'];
+        $employee_id = $emp['employee_no']; // This will be used in SQL queries
+        break;
+    }
 }
-// Fetch leave balances for the logged-in employee
-$leaveBalanceSql = "SELECT lt.leave_type, elb.balance
+
+if (!$employee || !$employee_id) {
+    die("Employee not found from API.");
+}
+
+// Fetch leave balances
+$leaveBalanceSql = "SELECT lt.leave_type, elb.balance, lt.leave_code
                     FROM employee_leave_balances elb
-                    JOIN leave_types lt ON elb.leave_code = lt.leave_code
+                    JOIN leave_types lt ON elb.leave_id = lt.leave_id
                     WHERE elb.employee_id = ?";
 $leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
 $leaveBalanceStmt->bind_param("i", $employee_id);
 $leaveBalanceStmt->execute();
 $leaveBalanceResult = $leaveBalanceStmt->get_result();
 
-
-
-
-// Fetch attendance records for the logged-in employee
-$attendanceSql = "SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
-                  FROM attendance a 
-                  WHERE a.employee_id = ? 
-                  ORDER BY a.attendance_date DESC";
-
-$attendanceStmt = $conn->prepare($attendanceSql);
-$attendanceStmt->bind_param("i", $employee_id);
-$attendanceStmt->execute();
-$attendanceResult = $attendanceStmt->get_result();
-
-
-
-// Initialize date variables
-$from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
-$to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
-
-// Define the base query
-$query = "SELECT * FROM attendance WHERE employee_id = ?";
-
-// Add date range filtering if both dates are specified
-if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND attendance_date BETWEEN ? AND ?";
-}
-
-// Prepare and execute the query with the date range parameters
-$stmt = $conn->prepare($query);
-if (!empty($from_date) && !empty($to_date)) {
-    $stmt->bind_param("iss", $employee_id, $from_date, $to_date);
-} else {
-    $stmt->bind_param("i", $employee_id);
-}
-$stmt->execute();
-$attendanceResult = $stmt->get_result();
-
-
+// Fetch pending leave requests
+$pendingRequestsSql = "SELECT lr.leave_id, lt.leave_type, lr.start_date, lr.end_date, lr.total_days, lr.status, lr.remarks 
+                       FROM employee_leave_requests lr 
+                       JOIN leave_types lt ON lr.leave_id = lt.leave_id 
+                       WHERE lr.employee_id = ? AND lr.status = 'Pending'";
+$pendingRequestsStmt = $conn->prepare($pendingRequestsSql);
+$pendingRequestsStmt->bind_param("i", $employee_id);
+$pendingRequestsStmt->execute();
+$pendingRequestsResult = $pendingRequestsStmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -171,22 +148,20 @@ $attendanceResult = $stmt->get_result();
                     // Fetch leave balances for the logged-in employee
                     $leaveBalanceSql = "SELECT lt.leave_type, elb.balance, lt.leave_code
                                         FROM employee_leave_balances elb
-                                        JOIN leave_types lt ON elb.leave_code = lt.leave_code
-                                        WHERE elb.employee_id = ?";
-                    $leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
-                    $leaveBalanceStmt->bind_param("i", $employee_id);
-                    $leaveBalanceStmt->execute();
-                    $leaveBalanceResult = $leaveBalanceStmt->get_result();
+                                        JOIN leave_types lt ON elb.leave_id = lt.leave_id
+                                        WHERE elb.employee_id = '$employee_id'";  // '$employee_id' is a string (EMP0001 etc.)
+                    $leaveBalanceResult = mysqli_query($conn, $leaveBalanceSql);
 
-                    // Display the leave types with their balances
-                    while ($leaveBalance = $leaveBalanceResult->fetch_assoc()) {
-                        // Escape the values to prevent XSS
-                        $leave_type = htmlspecialchars($leaveBalance['leave_type']);
-                        $balance = htmlspecialchars($leaveBalance['balance']);
-                        $leave_code = htmlspecialchars($leaveBalance['leave_code']);
+                    if ($leaveBalanceResult && mysqli_num_rows($leaveBalanceResult) > 0) {
+                        while ($leaveBalance = mysqli_fetch_assoc($leaveBalanceResult)) {
+                            $leave_type = htmlspecialchars($leaveBalance['leave_type']);
+                            $balance = htmlspecialchars($leaveBalance['balance']);
+                            $leave_code = htmlspecialchars($leaveBalance['leave_code']);
 
-                        // Create the dropdown option for each leave type with its balance
-                        echo '<option value="' . $leave_code . '">' . $leave_type . ' (' . $balance . ' days available)</option>';
+                            echo '<option value="' . $leave_code . '">' . $leave_type . ' (' . $balance . ' days available)</option>';
+                        }
+                    } else {
+                        echo '<option disabled>No leave types found</option>';
                     }
                     ?>
                 </select>
@@ -271,5 +246,16 @@ $attendanceResult = $stmt->get_result();
 
 
 <script src="../js/portal-employee.js"></script>
+<script>
+function toggleOverlay() {
+    const overlay = document.getElementById('requestLeaveOverlay');
+    if (overlay.style.display === "none" || overlay.style.display === "") {
+        overlay.style.display = "block";
+    } else {
+        overlay.style.display = "none";
+    }
+}
+</script>
+
 </body>
 </html>

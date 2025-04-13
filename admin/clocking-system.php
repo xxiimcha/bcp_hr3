@@ -1,320 +1,209 @@
 <?php
 include '../config.php';
 session_start();
-
-if (!isset($_SESSION['username'])) {
-    header("Location: ../index.php");
-    exit();
-}
-
-$username = $_SESSION['username'];
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Time Clocking</title>
-    <link rel="icon" type="image/webp" href="../img/logo.webp">
-    <link rel="stylesheet" href="../css/time-clocking.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-        <!--THIS IS FOR INTERNAL OR OFFLINE QRSCANNER I IMPORT QRCODE<script src="./node_modules/html5-qrcode/html5-qrcode.min.js"></script>-->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Time Clocking</title>
+  <link rel="icon" href="../img/logo.webp">
+  <link rel="stylesheet" href="../css/time-clocking.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    .time-display {
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      background: #222;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .manual-input input {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .manual-input button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #employee-details {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .card {
+      background: #f9f9f9;
+      color: #000;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
+
+    .info-label {
+      font-weight: bold;
+    }
+
+    #scanner-status {
+      color: #00cfff;
+      font-weight: 500;
+      margin-top: 15px;
+    }
+
+    #success-message {
+      display: none;
+      margin-top: 10px;
+      color: #00ff80;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-             
-    <!-- Panel with Employee Information -->
-    <div class="container">
-        <div id="header">
-            <button class="back-button" onclick="window.location.href='time-and-attendance-home.php'">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-                       
 
-                    <!-- Copy Link Button -->
-        <button class="copy-link-button" onclick="copyLinkToClipboard()" title="Copy Link">
-            <i class="fas fa-link"></i>
+<div class="container">
+  <div id="header">
+    <button class="back-button" onclick="window.location.href='time-and-attendance-home.php'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <button class="copy-link-button" onclick="copyLinkToClipboard()" title="Copy Link">
+      <i class="fas fa-link"></i>
+    </button>
+  </div>
 
+  <div id="copy-success-message">Link copied to clipboard!</div>
 
-        </button>
+  <div class="info-panel">
+    <h2 style="color: #28a745;">Manual Attendance Entry</h2>
+    <hr class="hr">
+    <div class="time-display" id="realtime-clock">Loading time...</div>
+
+    <div class="manual-input">
+      <label for="fingerprint-id">Enter Fingerprint ID:</label>
+      <input type="text" id="fingerprint-id" placeholder="Enter fingerprint ID">
+      <button onclick="submitFingerprintID()">Submit</button>
+    </div>
+
+    <div id="employee-details">
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div class="card" style="flex: 1;">
+          <h3>👤 Employee Profile</h3>
+          <p><span class="info-label">Employee ID:</span> <span id="employee-id"></span></p>
+          <p><span class="info-label">Name:</span> <span id="employee-name"></span></p>
+          <p><span class="info-label">Position:</span> <span id="employee-position"></span></p>
+          <p><span class="info-label">Department:</span> <span id="employee-department"></span></p>
         </div>
-<!-- Success Message Container (Initially hidden) -->
-<div id="copy-success-message">
-        Link copied to clipboard!
-    </div>
-        <div class="info-panel">
-            <h2>Scan QR CODE</h2>
-            <hr class="hr"></hr>
-            <h4>Stamp the attendance and ensure your working hours are accurately recorded.</h4><br>
 
-            <!-- QR Code Scanner -->
-            <center>
-                <div class="scanner-container">
-                    <div id="qr-reader"></div> <!-- QR Scanner will appear here -->
-                    <div id="qr-reader-results"></div> <!-- Scan results will be displayed here -->
-                    <!-- Success Message Container -->
-            <div id="success-message" style="display: none; margin-top: 20px; color: #fff; font-weight: bold;"></div>
-                </div>
-            </center>
-            
-                         <!-- Add Manual Input Button 
-<button class="manual-input-button" onclick="showManualInputForm()">Manual Input</button><br>-->
-
-<p><strong class="p-text">Employee ID:</strong> <span class="text" id="employee-id"></span></p>
-<p><strong class="p-text">Employee Name:</strong> <span class="text" id="employee-name"></span></p>
-<p><strong class="p-text">Position:</strong> <span class="text" id="employee-position"></span></p>
-<p><strong class="p-text">Department:</strong> <span class="text" id="employee-department"></span></p>
-<hr>
-<p><strong class="p-text">Shift Type:</strong> <span class="text" id="shift-name"></span></p>
-<p><strong class="p-text">Shift Start:</strong> <span class="text" id="shift-start"></span></p>
-<p><strong class="p-text">Shift End:</strong> <span class="text" id="shift-end"></span></p>
-<div class="button-panel">
-                <button class="time-button" id="time-in-button">Time In</button>
-                <button class="time-button" id="time-out-button">Time Out</button>
-                <button class="time-button" id="overtime-in-button">Overtime In</button>
-                <button class="time-button" id="overtime-out-button">Overtime Out</button>
-            </div>
+        <div class="card" style="flex: 1;">
+          <h3>🕒 Today's Attendance</h3>
+          <p><span class="info-label">Shift Type:</span> <span id="shift-name"></span></p>
+          <p><span class="info-label">Shift Start:</span> <span id="shift-start"></span></p>
+          <p><span class="info-label">Shift End:</span> <span id="shift-end"></span></p>
+          <hr>
+          <p><span class="info-label">Time In:</span> <span id="attendance-in">-</span></p>
+          <p><span class="info-label">Time Out:</span> <span id="attendance-out">-</span></p>
+          <p><span class="info-label">Status:</span> <span id="attendance-status">-</span></p>
+          <p><span class="info-label">Hours Worked:</span> <span id="attendance-hours">-</span></p>
+          <p><span class="info-label">Overtime:</span> <span id="attendance-ot">-</span></p>
+          <p><span class="info-label">Late:</span> <span id="attendance-late">-</span></p>
         </div>
+      </div>
+
+      <div id="scanner-status"></div>
+      <div id="success-message"></div>
     </div>
-    </div>
-
-
-<!--THIS PART IS FOR MANUAL-->
-
-
+  </div>
+</div>
 
 <script>
-  //SCAN QRCODE
-
-      // Function to decrypt the data
-      function decryptData(encryptedText) {
-        var bytes = CryptoJS.AES.decrypt(encryptedText, '4S2aR9xB8pLmEoD1K3PqV7wXcAeJiG6');
-        var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-        return decryptedData;
-    }
-
-    // Function to initialize the QR code scanner
-    function initializeQrScanner() {
-        var qrCodeScanner = new Html5Qrcode("qr-reader");
-        qrCodeScanner.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: 250 }, 
-            onScanSuccess, 
-            onScanError
-        );
-    }
-
-    // Function to reset employee data display
-    function resetEmployeeDataDisplay() {
-        document.getElementById('employee-name').innerText = '';
-        document.getElementById('employee-position').innerText = '';
-        document.getElementById('employee-department').innerText = '';
-        document.getElementById('success-message').style.display = "none"; // Hide success message
-    }
-
-    // Function to handle successful scans
-    function onScanSuccess(qrCodeMessage) {
-        // Assume qrCodeMessage is the encrypted employee ID
-        var encryptedId = qrCodeMessage.trim();
-        var employeeId = decryptData(encryptedId); // Decrypt the scanned employee ID
-
-        // Display the scanned employee ID
-        document.getElementById('qr-reader-results').innerText = `Scanning Complete!
-         
-        Employee ID: ${employeeId}`;
-        document.getElementById('employee-id').innerText = employeeId;
-
-        // Clear previous employee data
-        resetEmployeeDataDisplay();
-
-        // Fetch employee data from PHP
-        fetchEmployeeData(employeeId);
-
-        // Disable scanner for 3 seconds
-        disableScanner();
-    }
-
-    function disableScanner() {
-        // Stop the scanner
-        var qrCodeScanner = new Html5Qrcode("qr-reader");
-        qrCodeScanner.stop().then((ignore) => {
-            // Restart the scanner after 3 seconds
-            setTimeout(() => {
-                initializeQrScanner();
-            }, 3000); // 3000 milliseconds = 3 seconds
-        }).catch((err) => {
-            console.error("Failed to stop QR scanner: ", err);
-        });
-    }
-
-    function onScanError(errorMessage) {
-        // Handle the error
-        console.error(errorMessage);
-    }
-
-    function fetchEmployeeData(employeeId) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', `get_employee_info.php?employee_id=${employeeId}`, true);
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            var employeeData = JSON.parse(xhr.responseText);
-
-            if (employeeData) {
-                document.getElementById('employee-name').innerText = employeeData.employee_name;
-                document.getElementById('employee-position').innerText = employeeData.position;
-                document.getElementById('employee-department').innerText = employeeData.department_name;
-                
-                // Display shift details
-                document.getElementById('shift-name').innerText = employeeData.shift_name || "N/A";
-                document.getElementById('shift-start').innerText = employeeData.shift_start || "N/A";
-                document.getElementById('shift-end').innerText = employeeData.shift_end || "N/A";
-
-                document.getElementById('success-message').innerText = "Employee data loaded successfully.";
-                document.getElementById('success-message').style.display = "block";
-            } else {
-                resetEmployeeDataDisplay();
-                document.getElementById('success-message').innerText = "Employee not found.";
-                document.getElementById('success-message').style.display = "block";
-            }
-        } else {
-            resetEmployeeDataDisplay();
-            document.getElementById('success-message').innerText = "Error fetching employee data.";
-            document.getElementById('success-message').style.display = "block";
-            console.error("Error fetching employee data");
-        }
-    };
-    xhr.send();
+function updateClock() {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const gmtPlus8 = new Date(utc + (3600000 * 8));
+  const timeString = gmtPlus8.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateString = gmtPlus8.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('realtime-clock').innerText = `${dateString} ${timeString}`;
 }
+setInterval(updateClock, 1000);
+updateClock();
 
+let clearTimeoutHandle;
 
-    // Initialize the QR scanner on page load
-    initializeQrScanner();
+function submitFingerprintID() {
+  const fingerprintId = document.getElementById('fingerprint-id').value.trim();
+  if (!fingerprintId) return alert('Please enter a fingerprint ID');
 
-</script>
+  fetch(`../controllers/clocking.php?action=lookup&fingerprint_id=${fingerprintId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        document.getElementById('employee-id').innerText = data.employee_id;
+        document.getElementById('employee-details').style.display = 'block';
+        document.getElementById('scanner-status').innerText = data.message || '';
+        document.getElementById('success-message').innerText = "Attendance recorded!";
+        document.getElementById('success-message').style.display = "block";
 
-<script>
-    // Time In functionality
-    document.getElementById('time-in-button').addEventListener('click', function () {
-        var employeeId = document.getElementById('employee-id').innerText;
-
-        if (!employeeId) {
-            alert("Employee ID not found. Please scan the QR code first.");
-            return;
-        }
-
-        // Send AJAX request to time in the employee
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '../admin/clocking/time_in.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                if (response.status === 'success') {
-                    alert(response.message);
-                } else {
-                    alert(response.message);
-                }
-            } else {
-                console.error("Failed to time in the employee.");
+        fetch('https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs')
+          .then(res => res.json())
+          .then(apiData => {
+            const emp = apiData.data.find(e => e.employee_no === data.employee_id);
+            if (emp) {
+              document.getElementById('employee-name').innerText = `${emp.firstname} ${emp.lastname}`;
+              document.getElementById('employee-position').innerText = emp.position || 'N/A';
+              document.getElementById('employee-department').innerText = emp.department_name || 'N/A';
             }
-        };
-        xhr.send(`employee_id=${employeeId}`);
+          });
+
+        const shift = data.shift || {};
+        document.getElementById('shift-name').innerText = shift.shift_name || 'N/A';
+        document.getElementById('shift-start').innerText = shift.shift_start || 'N/A';
+        document.getElementById('shift-end').innerText = shift.shift_end || 'N/A';
+
+        fetch(`../controllers/get_today_attendance.php?employee_id=${data.employee_id}`)
+          .then(res => res.json())
+          .then(res => {
+            const a = res.data || {};
+            document.getElementById('attendance-in').innerText = a.time_in || '-';
+            document.getElementById('attendance-out').innerText = a.time_out !== '0000-00-00 00:00:00' ? a.time_out : '-';
+            document.getElementById('attendance-status').innerText = a.status || '-';
+            document.getElementById('attendance-hours').innerText = a.hours_worked || '0.00';
+            document.getElementById('attendance-ot').innerText = a.overtime_hours || '0.00';
+            document.getElementById('attendance-late').innerText = a.late + ' minute(s)' || '0';
+          });
+
+        if (clearTimeoutHandle) clearTimeout(clearTimeoutHandle);
+        clearTimeoutHandle = setTimeout(() => {
+          document.getElementById('employee-details').style.display = 'none';
+          document.getElementById('scanner-status').innerText = '';
+          document.getElementById('success-message').style.display = 'none';
+          document.getElementById('fingerprint-id').value = '';
+        }, 15000);
+      } else {
+        alert(data.message);
+      }
     });
-
-    // Time Out functionality
-    document.getElementById('time-out-button').addEventListener('click', function () {
-        var employeeId = document.getElementById('employee-id').innerText;
-
-        if (!employeeId) {
-            alert("Employee ID not found. Please scan the QR code first.");
-            return;
-        }
-
-        // Send AJAX request to time out the employee
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '../admin/clocking/time_out.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                if (response.status === 'success') {
-                    alert(response.message);
-                } else {
-                    alert(response.message);
-                }
-            } else {
-                console.error("Failed to time out the employee.");
-            }
-        };
-        xhr.send(`employee_id=${employeeId}`);
-    });
-
-
-    // Overtime In functionality
-document.getElementById('overtime-in-button').addEventListener('click', function () {
-    var employeeId = document.getElementById('employee-id').innerText;
-
-    if (!employeeId) {
-        alert("Employee ID not found. Please scan the QR code first.");
-        return;
-    }
-
-    // Send AJAX request to register Overtime In
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '../admin/clocking/overtime_in.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            if (response.status === 'success') {
-                alert(response.message);
-            } else {
-                alert(response.message);
-            }
-        } else {
-            console.error("Failed to register overtime in for the employee.");
-        }
-    };
-    xhr.send(`employee_id=${employeeId}`);
-});
-// Overtime Out functionality
-document.getElementById('overtime-out-button').addEventListener('click', function () {
-    var employeeId = document.getElementById('employee-id').innerText;
-
-    if (!employeeId) {
-        alert("Employee ID not found. Please scan the QR code first.");
-        return;
-    }
-
-    // Send AJAX request to register Overtime Out
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '../admin/clocking/overtime_out.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            if (response.status === 'success') {
-                alert(response.message);
-            } else {
-                alert(response.message);
-            }
-        } else {
-            console.error("Failed to register overtime out for the employee.");
-        }
-    };
-    xhr.send(`employee_id=${employeeId}`);
-});
-
+}
 </script>
-
 </body>
-    <!-- JavaScript to handle overlays and confirmations -->
-    <script src="../js/no-previousbutton.js"></script>
-    <script src="../js/toggle-darkmode.js"></script>
-    <script src="../js/time-clock.js"></script>
-
 </html>

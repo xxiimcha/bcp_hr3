@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             FROM attendance a
             JOIN employee_info ei ON a.employee_id = ei.employee_id
             JOIN departments d ON ei.department_id = d.department_id
-            LEFT JOIN employee_shifts es ON a.employee_id = es.employee_id
+            LEFT JOIN emp_shifts es ON a.employee_id = es.employee_id
             LEFT JOIN shift_types st ON es.shift_type_id = st.shift_type_id
             WHERE a.attendance_id = ?";
 

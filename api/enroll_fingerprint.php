@@ -1,52 +1,24 @@
 <?php
 include '../config.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (!isset($_POST['employee_id']) || empty($_POST['employee_id'])) {
-        die("Error: Missing employee ID.");
+if ($_POST['action'] == 'enroll') {
+    $employee_id = $_POST['employee_id'] ?? '';
+    $fingerprint_id = $_POST['fingerprint_id'] ?? '';
+
+    if (empty($employee_id) || empty($fingerprint_id)) {
+        echo "Missing data.";
+        exit;
     }
 
-    $employee_id = intval($_POST['employee_id']); // Convert to integer
+    $employee_id = mysqli_real_escape_string($conn, $employee_id);
+    $fingerprint_id = mysqli_real_escape_string($conn, $fingerprint_id);
 
-    // Check if employee_id exists
-    $check_sql = "SELECT employee_id FROM employee_info WHERE employee_id = ?";
-    $stmt = $conn->prepare($check_sql);
-    $stmt->bind_param("i", $employee_id);
-    $stmt->execute();
-    $stmt->store_result();
+    $sql = "INSERT INTO employee_fingerprints (employee_id, fingerprint_id) 
+            VALUES ('$employee_id', '$fingerprint_id')";
 
-    if ($stmt->num_rows == 0) {
-        die("Error: Employee ID does not exist.");
-    }
-    $stmt->close();
-
-    // Generate random fingerprint ID (Replace this with actual scanner data)
-    $fingerprint_id = rand(10000, 99999);
-
-    // Check if the employee already has a fingerprint registered
-    $check_fingerprint = "SELECT * FROM employee_fingerprints WHERE employee_id = ?";
-    $stmt = $conn->prepare($check_fingerprint);
-    $stmt->bind_param("i", $employee_id);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows > 0) {
-        die("Error: Fingerprint already enrolled.");
-    }
-    $stmt->close();
-
-    // Insert fingerprint into the database
-    $insert_sql = "INSERT INTO employee_fingerprints (employee_id, fingerprint_id) VALUES (?, ?)";
-    $stmt = $conn->prepare($insert_sql);
-    $stmt->bind_param("ii", $employee_id, $fingerprint_id);
-
-    if ($stmt->execute()) {
-        echo "success: " . $fingerprint_id;
+    if (mysqli_query($conn, $sql)) {
+        echo "success";
     } else {
-        echo "Error enrolling fingerprint.";
+        echo "failed: " . mysqli_error($conn);
     }
-
-    $stmt->close();
-    $conn->close();
 }
-?>

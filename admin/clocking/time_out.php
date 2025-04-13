@@ -19,7 +19,7 @@ try {
     // Check the employee's shift details, including shift end time
     $shiftQuery = "
         SELECT st.shift_start, st.shift_end 
-        FROM employee_shifts es
+        FROM emp_shifts es
         JOIN shift_types st ON es.shift_type_id = st.shift_type_id
         WHERE es.employee_id = ?
         LIMIT 1

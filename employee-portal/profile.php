@@ -7,75 +7,67 @@ if (!isset($_SESSION['employee_id'])) {
     exit();
 }
 
-// Fetch employee details along with their department name from the database
 $employee_id = $_SESSION['employee_id'];
-$sql = "SELECT e.*, d.department_name, st.shift_start, st.shift_end 
-        FROM employee_info e 
-        JOIN departments d ON e.department_id = d.department_id 
-        JOIN employee_shifts es ON e.employee_id = es.employee_id 
-        JOIN shift_types st ON es.shift_type_id = st.shift_type_id
-        WHERE e.employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employee_id);
-$stmt->execute();
-$result = $stmt->get_result();
 
-if ($result->num_rows > 0) {
-    $employee = $result->fetch_assoc();
-} else {
-    echo "No employee found.";
+// === STEP 1: Fetch employee details from external API ===
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$api_response = file_get_contents($api_url);
+$api_data = json_decode($api_response, true);
+
+$employee = null;
+foreach ($api_data['data'] as $emp) {
+    if ($emp['employee_no'] == $employee_id) {
+        $employee = $emp;
+        $employee['employee_name'] = $emp['firstname'] . ' ' . $emp['lastname'];
+        break;
+    }
+}
+
+if (!$employee) {
+    echo "Employee not found from API.";
     exit();
 }
-// Fetch leave balances for the logged-in employee
+
+// === STEP 2: Fetch shift schedule from DB ===
+$shiftQuery = "SELECT st.shift_start, st.shift_end 
+               FROM emp_shifts es 
+               JOIN shift_types st ON es.shift_type_id = st.shift_type_id 
+               WHERE es.employee_id = $employee_id";
+$shiftResult = mysqli_query($conn, $shiftQuery);
+if ($shiftResult && mysqli_num_rows($shiftResult) > 0) {
+    $shift = mysqli_fetch_assoc($shiftResult);
+    $employee['shift_start'] = $shift['shift_start'];
+    $employee['shift_end'] = $shift['shift_end'];
+} else {
+    $employee['shift_start'] = 'N/A';
+    $employee['shift_end'] = 'N/A';
+}
+
+// === STEP 3: Fetch leave balances ===
 $leaveBalanceSql = "SELECT lt.leave_type, elb.balance
                     FROM employee_leave_balances elb
                     JOIN leave_types lt ON elb.leave_code = lt.leave_code
-                    WHERE elb.employee_id = ?";
-$leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
-$leaveBalanceStmt->bind_param("i", $employee_id);
-$leaveBalanceStmt->execute();
-$leaveBalanceResult = $leaveBalanceStmt->get_result();
+                    WHERE elb.employee_id = $employee_id";
+$leaveBalanceResult = mysqli_query($conn, $leaveBalanceSql);
 
-
-
-
-// Fetch attendance records for the logged-in employee
+// === STEP 4: Fetch attendance ===
 $attendanceSql = "SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
                   FROM attendance a 
-                  WHERE a.employee_id = ? 
+                  WHERE a.employee_id = $employee_id 
                   ORDER BY a.attendance_date DESC";
+$attendanceResult = mysqli_query($conn, $attendanceSql);
 
-$attendanceStmt = $conn->prepare($attendanceSql);
-$attendanceStmt->bind_param("i", $employee_id);
-$attendanceStmt->execute();
-$attendanceResult = $attendanceStmt->get_result();
-
-
-
-// Initialize date variables
+// === STEP 5: Attendance filter by date ===
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
 
-// Define the base query
-$query = "SELECT * FROM attendance WHERE employee_id = ?";
-
-// Add date range filtering if both dates are specified
+$filterQuery = "SELECT * FROM attendance WHERE employee_id = $employee_id";
 if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND attendance_date BETWEEN ? AND ?";
+    $filterQuery .= " AND attendance_date BETWEEN '$from_date' AND '$to_date'";
 }
-
-// Prepare and execute the query with the date range parameters
-$stmt = $conn->prepare($query);
-if (!empty($from_date) && !empty($to_date)) {
-    $stmt->bind_param("iss", $employee_id, $from_date, $to_date);
-} else {
-    $stmt->bind_param("i", $employee_id);
-}
-$stmt->execute();
-$attendanceResult = $stmt->get_result();
-
-
+$attendanceResult = mysqli_query($conn, $filterQuery);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -154,21 +146,26 @@ $attendanceResult = $stmt->get_result();
 
     <!-- Left Panel -->
     <div class="profile-panel">
-        <p><strong>Employee ID:</strong> <?php echo htmlspecialchars($employee['employee_id']); ?></p>
-        <p><strong>Employee Name:</strong> <?php echo htmlspecialchars($employee['employee_name']); ?></p>
-        <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars($employee['date_of_birth']); ?></p>
-        <p><strong>Contact No:</strong> <?php echo htmlspecialchars($employee['contact_no']); ?></p>
-        <p><strong>Email:</strong> <?php echo htmlspecialchars($employee['email_address']); ?></p>
+        <p><strong>Employee No:</strong> <?php echo htmlspecialchars($employee['employee_no']); ?></p>
+        <p><strong>Employee Name:</strong> <?php echo htmlspecialchars($employee['firstname'] . ' ' . $employee['lastname']); ?></p>
+        <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars(date('F d, Y', strtotime($employee['birthdate']))); ?></p>
+        <p><strong>Contact No:</strong> <?php echo htmlspecialchars($employee['number']); ?></p>
+        <p><strong>Email:</strong> <?php echo htmlspecialchars($employee['email']); ?></p>
         <p><strong>Address:</strong> <?php echo htmlspecialchars($employee['address']); ?></p>
     </div>
 
     <!-- Right Panel -->
     <div class="profile-panel">
-        <p><strong>Department:</strong> <?php echo htmlspecialchars($employee['department_name']); ?></p>
         <p><strong>Position:</strong> <?php echo htmlspecialchars($employee['position']); ?></p>
-        <p><strong>Date Hired:</strong> <?php echo htmlspecialchars($employee['date_hired']); ?></p>
+        <p><strong>Gender:</strong> <?php echo htmlspecialchars($employee['gender']); ?></p>
+        <p><strong>Civil Status:</strong> <?php echo htmlspecialchars($employee['civil_status']); ?></p>
+        <p><strong>Shift Time:</strong> <?php echo $employee['shift_start'] . ' - ' . $employee['shift_end']; ?></p>
+        <p><strong>Profile Picture:</strong><br>
+            <img src="<?php echo htmlspecialchars($employee['profile']); ?>" alt="Profile Picture" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-top:10px;">
+        </p>
     </div>
 </section>
+
 <?php if (isset($_GET['message'])): ?>
             <div class="alert">
                 <?php echo htmlspecialchars($_GET['message']); ?>
@@ -202,12 +199,6 @@ $attendanceResult = $stmt->get_result();
         </div>
     </form>
 </section>
-
-
-
-
-
-
     </main>
 
     <style>

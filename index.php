@@ -1,6 +1,5 @@
 <?php
-require 'config.php'; // Include the database connection
-
+require 'config.php';
 session_start();
 
 $error = '';
@@ -8,172 +7,131 @@ $success_message = '';
 
 // Handle admin login
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['admin_login'])) {
-    $admin_username = isset($_POST['username']) ? trim($_POST['username']) : '';
-    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $admin_username = mysqli_real_escape_string($conn, trim($_POST['username'] ?? ''));
+    $password = $_POST['password'] ?? '';
 
-    // Updated SQL query to match the admin_users table
-    $sql = "SELECT * FROM admin_users WHERE admin_username=?";
-    $stmt = $conn->prepare($sql);
-    if ($stmt) {
-        $stmt->bind_param("s", $admin_username);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    $query = "SELECT * FROM admin_users WHERE admin_username = '$admin_username'";
+    $result = mysqli_query($conn, $query);
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['username'] = $admin_username;
+            $_SESSION['user_id'] = $row['id'];
 
-            // Verify the password using password_verify function
-            if (password_verify($password, $row['password'])) {
-                $_SESSION['username'] = $admin_username; // Store username in session
-                $_SESSION['user_id'] = $row['id']; // Store user ID in session
-
-                // Redirect based on the username
-                if ($admin_username === 'QRscanner') {
-                    header("Location: admin/employee-clocking.php"); // Redirect for QRscanner user
-                } else {
-                    header("Location: admin/time-and-attendance-home.php"); // Redirect to the default dashboard
-                }
-                exit();
-            } else {
-                $error = 'Invalid username or password.'; // Incorrect password
-            }
+            header("Location: " . ($admin_username === 'QRscanner'
+                ? "admin/employee-clocking.php"
+                : "admin/time-and-attendance-home.php"));
+            exit();
         } else {
-            $error = 'No username or password found.'; // No user found
+            $error = 'Invalid username or password.';
         }
-
-        $stmt->close();
     } else {
-        $error = 'Database error: Unable to prepare statement.';
+        $error = 'No username or password found.';
     }
 }
 
 // Handle employee login
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['employee_login'])) {
-    $employee_id = isset($_POST['employee_id']) ? intval($_POST['employee_id']) : 0;
-    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $employee_id = mysqli_real_escape_string($conn, trim($_POST['employee_id'] ?? ''));
+    $password = $_POST['password'] ?? '';
 
-    // Prepare and bind the SQL query
-    $stmt = $conn->prepare("SELECT password, is_active FROM employee_logins WHERE employee_id = ?");
-    if ($stmt) {
-        $stmt->bind_param("i", $employee_id);
-        $stmt->execute();
-        $stmt->store_result();
+    $query = "SELECT * FROM employee_logins WHERE employee_id = '$employee_id'";
+    $result = mysqli_query($conn, $query);
 
-        // Check if employee exists
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($hashedPassword, $isActive);
-            $stmt->fetch();
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        if (password_verify($password, $row['password']) && $row['is_active']) {
+            $api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+            $api_response = file_get_contents($api_url);
+            $employeesData = json_decode($api_response, true);
 
-            // Verify password and check if the account is active
-            if (password_verify($password, $hashedPassword) && $isActive) {
-                // Successful login
-                session_regenerate_id(true); // Regenerate session ID to prevent session fixation attacks
-                $_SESSION['employee_id'] = $employee_id; // Store employee ID in the session
-                $_SESSION['logged_in'] = true; // Store a 'logged_in' status for future checks
-                header("Location: employee-portal/portal.php"); // Redirect to the employee dashboard
+            $employee_found = false;
+            foreach ($employeesData['data'] as $emp) {
+                if ($emp['employee_no'] === $employee_id) {
+                    $_SESSION['employee_name'] = $emp['firstname'] . ' ' . $emp['lastname'];
+                    $_SESSION['position'] = $emp['position'];
+                    $_SESSION['employee_id'] = $emp['employee_no'];
+                    $_SESSION['logged_in'] = true;
+                    $employee_found = true;
+                    break;
+                }
+            }
+
+            if ($employee_found) {
+                session_regenerate_id(true);
+                header("Location: employee-portal/portal.php");
                 exit();
             } else {
-                $error = "Invalid password or account is inactive.";
+                $error = "Employee record not found in HR API.";
             }
         } else {
-            $error = "Employee ID not found.";
+            $error = "Invalid password or account is inactive.";
         }
-
-        $stmt->close(); // Close the statement
     } else {
-        $error = 'Database error: Unable to prepare statement.';
+        $error = "Employee ID not found.";
     }
 }
 
 // Handle password reset
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reset_password'])) {
-    $user_type = isset($_POST['user_type']) ? trim($_POST['user_type']) : '';
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    $new_password = isset($_POST['new_password']) ? $_POST['new_password'] : '';
-    $confirm_password = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
-    $username_or_employee_id = isset($_POST['username_or_employee_id']) ? trim($_POST['username_or_employee_id']) : '';
+    $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
+    $username_or_employee_id = mysqli_real_escape_string($conn, $_POST['username_or_employee_id']);
 
-    // Function to validate password complexity
     function isStrongPassword($password) {
-        return preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/', $password);
+        return preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/', $password);
     }
 
-    // Check if passwords match and are strong
     if ($new_password !== $confirm_password) {
         $error = "Passwords do not match.";
     } elseif (!isStrongPassword($new_password)) {
-        $error = "Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be at least 8 characters long.";
+        $error = "Password must be strong (upper/lower/number/special).";
     } else {
         $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
 
         if ($user_type === 'admin') {
-            // Admin password reset
-            $stmt = $conn->prepare("SELECT id FROM admin_users WHERE admin_username=? AND email=?");
-            if ($stmt) {
-                $stmt->bind_param("ss", $username_or_employee_id, $email);
-                $stmt->execute();
-                $stmt->store_result();
+            $check = "SELECT id FROM admin_users WHERE admin_username = '$username_or_employee_id' AND email = '$email'";
+            $result = mysqli_query($conn, $check);
 
-                if ($stmt->num_rows > 0) {
-                    $stmt->close();
-                    $stmt = $conn->prepare("UPDATE admin_users SET password=? WHERE admin_username=? AND email=?");
-                    if ($stmt) {
-                        $stmt->bind_param("sss", $hashed_password, $username_or_employee_id, $email);
-                        if ($stmt->execute()) {
-                            $success_message = "Admin password successfully reset.";
-                        } else {
-                            $error = "Error updating admin password.";
-                        }
-                        $stmt->close();
-                    } else {
-                        $error = "Database error: Unable to prepare update statement for admin.";
-                    }
+            if ($result && mysqli_num_rows($result) > 0) {
+                $update = "UPDATE admin_users SET password = '$hashed_password' WHERE admin_username = '$username_or_employee_id' AND email = '$email'";
+                if (mysqli_query($conn, $update)) {
+                    $success_message = "Admin password successfully reset.";
                 } else {
-                    $error = "Admin username or email not found.";
+                    $error = "Error updating admin password.";
                 }
             } else {
-                $error = "Database error: Unable to prepare select statement for admin.";
+                $error = "Admin username or email not found.";
             }
 
         } elseif ($user_type === 'employee') {
-            // Employee password reset
-            // First, verify the employee_id exists and matches the email in employee_info
-            $employee_id_int = intval($username_or_employee_id);
-            $stmt = $conn->prepare("SELECT ei.employee_id FROM employee_info ei JOIN employee_logins el ON ei.employee_id = el.employee_id WHERE ei.employee_id=? AND ei.email_address=?");
-            if ($stmt) {
-                $stmt->bind_param("is", $employee_id_int, $email);
-                $stmt->execute();
-                $stmt->store_result();
+            $check = "SELECT ei.employee_id 
+                      FROM employee_info ei 
+                      JOIN employee_logins el ON ei.employee_id = el.employee_id 
+                      WHERE ei.employee_id = '$username_or_employee_id' AND ei.email_address = '$email'";
+            $result = mysqli_query($conn, $check);
 
-                if ($stmt->num_rows > 0) {
-                    $stmt->close();
-                    // Update the password in employee_logins
-                    $stmt = $conn->prepare("UPDATE employee_logins SET password=? WHERE employee_id=?");
-                    if ($stmt) {
-                        $stmt->bind_param("si", $hashed_password, $employee_id_int);
-                        if ($stmt->execute()) {
-                            $success_message = "Employee password successfully reset.";
-                        } else {
-                            $error = "Error updating employee password.";
-                        }
-                        $stmt->close();
-                    } else {
-                        $error = "Database error: Unable to prepare update statement for employee.";
-                    }
+            if ($result && mysqli_num_rows($result) > 0) {
+                $update = "UPDATE employee_logins SET password = '$hashed_password' WHERE employee_id = '$username_or_employee_id'";
+                if (mysqli_query($conn, $update)) {
+                    $success_message = "Employee password successfully reset.";
                 } else {
-                    $error = "Employee ID or email not found.";
+                    $error = "Error updating employee password.";
                 }
             } else {
-                $error = "Database error: Unable to prepare select statement for employee.";
+                $error = "Employee ID or email not found.";
             }
         } else {
             $error = "Invalid user type selected.";
         }
     }
 }
+
 $conn->close();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">

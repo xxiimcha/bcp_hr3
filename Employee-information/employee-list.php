@@ -1,7 +1,5 @@
-<?php
-
+<?php 
 include '../config.php';
-
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -9,34 +7,28 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-$username = $_SESSION['username'];
-
-// Fetch employee data
-// Populate the dropdown with employee names and IDs
-
-// Fetch employee data along with department names
 $api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
-$employee_data = [];
 
-$response = file_get_contents($api_url);
-if ($response !== false) {
-    $json_data = json_decode($response, true);
-    if (isset($json_data['data'])) {
-        $employee_data = $json_data['data'];
-    }
+// Fetch employee info from the API
+$api_response = file_get_contents($api_url);
+$decoded = json_decode($api_response, true);
+
+// Ensure response is valid and has 'data'
+if (!$decoded || !isset($decoded['data'])) {
+    echo "Failed to fetch employee data.";
+    exit();
 }
+$employee_data = $decoded['data'];
 
-$fingerprint_query = "SELECT employee_id FROM employee_fingerprints";
-$fingerprint_result = $conn->query($fingerprint_query);
-
+// Fetch fingerprint-enrolled employee IDs
 $fingerprint_ids = [];
-if ($fingerprint_result && $fingerprint_result->num_rows > 0) {
-    while ($row = $fingerprint_result->fetch_assoc()) {
-        $fingerprint_ids[] = $row['employee_id'];
-    }
+$fingerprintQuery = "SELECT employee_id FROM employee_fingerprints";
+$fingerprintResult = $conn->query($fingerprintQuery);
+while ($row = $fingerprintResult->fetch_assoc()) {
+    $fingerprint_ids[] = $row['employee_id'];
 }
-
 ?>
+
 <?php include('../partials/navbar.php'); ?>
 <style>
     .modal {
@@ -307,43 +299,23 @@ function closeFingerprintModal() {
 function startFingerprintScan() {
     var employeeId = document.getElementById("modal_employee_id").value.trim();
 
-    if (!employeeId) {
-        alert("Error: Employee ID is missing.");
-        return;
-    }
+    // Set loading fingerprint image
+    $("#fingerprint-image").attr("src", "../assets/fingerprint-static.png");
 
-    console.log("Sending Employee ID:", employeeId); // Debugging log
+    // Build full path based on base URL
+    const baseUrl = window.location.origin; // works for local and deployed (e.g., http://domain.com)
+    const proxyUrl = `${baseUrl}/bcp_hr3/api/esp-proxy.php?employee_id=${encodeURIComponent(employeeId)}`;
 
-    var fingerprintImage = document.getElementById("fingerprint-image");
-    fingerprintImage.src = "../assets/fingerprint-scanning.gif"; // Show scanning animation
-
-    $.ajax({
-        url: "../api/enroll_fingerprint.php",
-        type: "POST",
-        data: { 
-            employee_id: employeeId, 
-            action: "scan" 
-        },
-        success: function (response) {
-            console.log("Server response:", response);
-
-            if (response.includes("already enrolled")) {
-                fingerprintImage.src = "../assets/fingerprint-fail.png";
-                alert("Fingerprint is already enrolled for this employee.");
-            } else if (response.includes("success")) {
-                fingerprintImage.src = "../assets/fingerprint-success.png";
-                alert("Fingerprint scan successful.");
-            } else {
-                fingerprintImage.src = "../assets/fingerprint-error.png";
-                alert("Fingerprint scan failed. Try again.");
-            }
-        },
-        error: function () {
-            fingerprintImage.src = "../assets/fingerprint-error.png";
-            alert("Error connecting to fingerprint scanner.");
-        }
+    $.get(proxyUrl, function (response) {
+        console.log("ESP8266 response:", response);
+        $("#fingerprint-image").attr("src", "../assets/fingerprint-static.png");
+        alert("Fingerprint ESP Response: " + response);
+    }).fail(function () {
+        $("#fingerprint-image").attr("src", "../assets/fingerprint-error.png");
+        alert("Failed to reach ESP8266 via proxy.");
     });
 }
+
 
 </script>
 

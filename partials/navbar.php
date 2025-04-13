@@ -39,7 +39,7 @@
                         <a href="../admin/time-and-attendance-home.php">
                             <i class="fas fa-clock"></i> Time and Attendance <!-- Icon for Time and Attendance -->
                         </a>
-                        <a href="../Employee-information/employee-list.php">
+                        <a href="../employee-information/employee-list.php">
                             <i class="fas fa-users"></i> Employee Information <!-- Icon for Employee Information -->
                         </a>
                         <a href="payroll/log-in.php">

@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1); 
+ini_set('display_startup_errors', 1); 
+error_reporting(E_ALL);
 include '../config.php';
 session_start();
 
@@ -7,73 +10,47 @@ if (!isset($_SESSION['employee_id'])) {
     exit();
 }
 
-// Fetch employee details along with their department name from the database
 $employee_id = $_SESSION['employee_id'];
-$sql = "SELECT e.*, d.department_name, st.shift_start, st.shift_end 
-        FROM employee_info e 
-        JOIN departments d ON e.department_id = d.department_id 
-        JOIN employee_shifts es ON e.employee_id = es.employee_id 
-        JOIN shift_types st ON es.shift_type_id = st.shift_type_id
-        WHERE e.employee_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employee_id);
-$stmt->execute();
-$result = $stmt->get_result();
 
-if ($result->num_rows > 0) {
-    $employee = $result->fetch_assoc();
-} else {
-    echo "No employee found.";
+// === 1. Fetch employee details from API ===
+$api_url = "https://hr1.paradisehoteltomasmorato.com/api/all-employee-docs";
+$api_response = file_get_contents($api_url);
+$api_data = json_decode($api_response, true);
+
+$employee = null;
+foreach ($api_data['data'] as $emp) {
+    if ($emp['employee_no'] == $employee_id) {
+        $employee = $emp;
+        $employee['employee_name'] = $emp['firstname'] . ' ' . $emp['lastname'];
+        break;
+    }
+}
+
+if (!$employee) {
+    echo "Employee not found in API.";
     exit();
 }
-// Fetch leave balances for the logged-in employee
-$leaveBalanceSql = "SELECT lt.leave_type, elb.balance
-                    FROM employee_leave_balances elb
-                    JOIN leave_types lt ON elb.leave_code = lt.leave_code
-                    WHERE elb.employee_id = ?";
-$leaveBalanceStmt = $conn->prepare($leaveBalanceSql);
-$leaveBalanceStmt->bind_param("i", $employee_id);
-$leaveBalanceStmt->execute();
-$leaveBalanceResult = $leaveBalanceStmt->get_result();
 
+// Escape employee_id since it's a user-controlled value
+$employee_id_escaped = mysqli_real_escape_string($conn, $employee_id);
 
+// === 2. Fetch leave balances from local DB ===
+$leaveBalanceSql = "
+    SELECT *
+    FROM employee_leave_balances elb
+    JOIN leave_types lt ON elb.leave_id = lt.leave_id
+    WHERE elb.employee_id = '$employee_id_escaped'
+";
+$leaveBalanceResult = mysqli_query($conn, $leaveBalanceSql);
 
-
-// Fetch attendance records for the logged-in employee
-$attendanceSql = "SELECT a.attendance_date, a.time_in, a.time_out, a.overtime_in, a.overtime_out, a.status 
-                  FROM attendance a 
-                  WHERE a.employee_id = ? 
-                  ORDER BY a.attendance_date DESC";
-
-$attendanceStmt = $conn->prepare($attendanceSql);
-$attendanceStmt->bind_param("i", $employee_id);
-$attendanceStmt->execute();
-$attendanceResult = $attendanceStmt->get_result();
-
-
-
-// Initialize date variables
-$from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
-$to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
-
-// Define the base query
-$query = "SELECT * FROM attendance WHERE employee_id = ?";
-
-// Add date range filtering if both dates are specified
-if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND attendance_date BETWEEN ? AND ?";
-}
-
-// Prepare and execute the query with the date range parameters
-$stmt = $conn->prepare($query);
-if (!empty($from_date) && !empty($to_date)) {
-    $stmt->bind_param("iss", $employee_id, $from_date, $to_date);
-} else {
-    $stmt->bind_param("i", $employee_id);
-}
-$stmt->execute();
-$attendanceResult = $stmt->get_result();
-
+// === 3. Fetch leave records from local DB ===
+$allRequestsSql = "
+    SELECT lr.leave_id, lt.leave_type, lr.start_date, lr.end_date, lr.total_days, lr.status, lr.remarks 
+    FROM employee_leave_records lr 
+    JOIN leave_types lt ON lr.leave_id = lt.leave_id 
+    WHERE lr.employee_id = '$employee_id_escaped'
+";
+$allRequestsResult = mysqli_query($conn, $allRequestsSql);
 
 ?>
 
@@ -164,8 +141,8 @@ $attendanceResult = $stmt->get_result();
                 </thead>
                 <tbody>
                     <?php
-                    if ($leaveBalanceResult->num_rows > 0) {
-                        while ($row = $leaveBalanceResult->fetch_assoc()) {
+                    if ($leaveBalanceResult && mysqli_num_rows($leaveBalanceResult) > 0) {
+                        while ($row = mysqli_fetch_assoc($leaveBalanceResult)) {
                             echo '<tr>';
                             echo '<td>' . htmlspecialchars($row['leave_type']) . '</td>';
                             echo '<td>' . htmlspecialchars($row['balance']) . ' days</td>';

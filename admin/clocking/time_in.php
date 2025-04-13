@@ -19,7 +19,7 @@ try {
     // Fetch the employee's shift start time
     $shiftQuery = "
         SELECT st.shift_start 
-        FROM employee_shifts es
+        FROM emp_shifts es
         JOIN shift_types st ON es.shift_type_id = st.shift_type_id
         WHERE es.employee_id = ?
     ";
